@@ -2,48 +2,35 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <List.hpp>
+#include <Servo.h>
 #include <DFRobot_DHT11.h>
-DFRobot_DHT11 DHT;
 //////////////
 
-/////////// pin 입력란
+/////////// 변수 입력란
 const int BUTTON = 5;
 const int RST_PIN = 9;
 const int SS_PIN = 10;
 const int PIR = 6;
-const int R_LED = 2;
-const int B_LED = 3;
-const int G_LED = 4;
-const int buzzer = 6; // conflict?
-const int fan = 7;
-const int DHT11_PIN = A1;
-const int FAN = A2; // replace air cleaner with fan
-const int dustSensor = A3;
-const int MQ135 = A4;
-const int MQ2 = A5;
-
-/////////// 변수 입력란
+const int LED = 4;
 int cardDetected = false;
 int pirstate = false;
 int person_count = 0;
 bool flag = true;
-const int COLOR[][3] = {
-    {200, 0, 0},    // Red
-    {200, 150, 0},  // Orange
-    {200, 200, 0},  // Yellow
-    {0, 200, 0},    // Green
-    {0, 0, 20}     // Blue
-};
-int dustLevel = 0;
-int gasLevel =0 ;
-String quality = "";
-int sensorThres = 170;
-int flammableGasLevel =0;
-bool fan_on = false; 
 unsigned long previousMillis = 0; 
 const long interval = 500; 
 int auto_temperature;
 int humidity; 
+DFRobot_DHT11 DHT;
+const int DHT11_PIN = A1;
+const int fan = 7;
+const int btn = A2;
+bool fan_on = false;
+
+int cutain_flag = 1;
+Servo servo;
+unsigned long lightstart = 0;
+unsigned long lightclose = 0;
+const unsigned long lightdelay = 3000;
 
 typedef enum {
   REGISTRATION = 0,
@@ -56,70 +43,7 @@ List<MFRC522::Uid> tag_list;
 ///////////
 
 
-/////////// 함수 입력하쇼
-void buzz_operation(){
-  flammableGasLevel = analogRead(MQ2);
-
-  Serial.print("Pin A0: ");
-  Serial.println(flammableGasLevel);
-  
-  // Checks if it has reached the threshold value
-  if (flammableGasLevel > sensorThres){
-    
-    tone(buzzer, 1000, 200);
-  }
-  else{
-    noTone(buzzer);
-  }
-}
-
-void air_sensor(){
-   dustLevel = analogRead(dustSensor);
-   gasLevel = analogRead(MQ135);
-
-  if(dustLevel<150){
-    quality = "Very GOOD!";
-     analogWrite(R_LED, COLOR[4][0]);
-     analogWrite(G_LED, COLOR[4][1]);
-     analogWrite(B_LED, COLOR[4][2]);
-     analogWrite(FAN, 0);
-  }
-   else if(dustLevel<300){
-     quality = "GOOD!";
-     analogWrite(R_LED, COLOR[3][0]);
-     analogWrite(G_LED, COLOR[3][1]);
-     analogWrite(B_LED, COLOR[3][2]);
-     analogWrite(FAN, 0);
-   }
-      
-   else if (dustLevel<450){
-     quality = "Poor!";
-     analogWrite(R_LED, COLOR[2][0]);
-     analogWrite(G_LED, COLOR[2][1]);
-     analogWrite(B_LED, COLOR[2][2]);
-     analogWrite(FAN, 150);
-   }
-   else if (dustLevel<600){
-     quality  = "Very bad!";
-     analogWrite(R_LED, COLOR[1][0]);
-     analogWrite(G_LED, COLOR[1][1]);
-     analogWrite(B_LED, COLOR[1][2]);
-     analogWrite(FAN, 150);
-   }
-   else{
-     quality = "Toxic";
-     analogWrite(R_LED, COLOR[0][0]);
-     analogWrite(G_LED, COLOR[0][1]);
-     analogWrite(B_LED, COLOR[0][2]);
-     analogWrite(FAN, 150);
-   }
-  Serial.print("dust level : ");
-  Serial.println(dustLevel);
-  // Serial.println(quality);
-  Serial.print("gas level : ");
-  Serial.println(gasLevel);
-}
-
+/////////// 입력하쇼
 int buttonPress() {
   int press;
   int buttonState;
@@ -130,6 +54,7 @@ int buttonPress() {
   return press;
 }
 
+
 void printUID(MFRC522::Uid uid) {
   for (byte i = 0; i < 4; i++) {
     Serial.print(uid.uidByte[i] < 0x10 ? " 0" : " ");
@@ -137,7 +62,6 @@ void printUID(MFRC522::Uid uid) {
   }
   Serial.println();
 }
-
 bool checkUID(MFRC522::Uid uid) {
   for (int i = 0; i < tag_list.getSize(); i++) {
     if (memcmp(tag_list.get(i).uidByte, rc522.uid.uidByte, 4) == 0) {
@@ -147,55 +71,6 @@ bool checkUID(MFRC522::Uid uid) {
   return false;
 }
 
-void read_sensor_data()
-{
-  DHT.read(DHT11_PIN);
-  auto_temperature = DHT.temperature;
-  humidity = DHT.humidity;
-  
-  Serial.print("temperature : ");
-  Serial.print(auto_temperature);
-  Serial.print(" , ");
-  Serial.print("humidity : ");
-  Serial.println(humidity);
-  Serial.println();
-}
-
-void control_fan()
-{
-  if (auto_temperature == 27)
-  {
-    unsigned long currentMillis = millis(); 
-    if (currentMillis - previousMillis >= 3000) 
-    { 
-      analogWrite(fan, 0); 
-      fan_on = false; 
-    }
-  }
-  else 
-  {
-    analogWrite(fan, 150);
-    fan_on = true; 
-  }
-}
-
-void control_fan_gui()
-{
-  if (Serial.available() > 0) 
-  {
-    char command = Serial.read();
-    if (command == '1') 
-    {
-      analogWrite(fan, 150);
-      fan_on = true; 
-    } 
-    else if (command == '0') 
-    {
-      analogWrite(fan, 0); 
-      fan_on = false; 
-    }
-  }
-}
 //////////
 
 ////////// setup문
@@ -208,25 +83,125 @@ void setup() {
   Serial.println("[STATUS] Registration");
   pinMode(BUTTON, INPUT_PULLUP);
   pinMode(PIR, INPUT);
-  pinMode(dustSensor, INPUT);
-  pinMode(MQ2, INPUT);
-  pinMode(MQ135, INPUT);
-  
-  pinMode(buzzer, OUTPUT);
-  pinMode(fan, OUTPUT);
+  pinMode(LED, OUTPUT);
 
+  pinMode(btn, INPUT);
+  pinMode(fan, OUTPUT);
+  servo.attach(8);
+  servo.write(10);
 }
 /////////////
 
 
 ///////////// loop문
 void loop() {
+
+
+
+
+
+
+
+
+
+
+  unsigned long currentMillis = millis();  // 현재 시간을 가져옵니다.
+
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;  // 이전 시간을 업데이트합니다.
+    read_sensor_data();
+    control_fan();
+  }
+  control_fan_gui();
+
+
+
+
+
+
+
+
+
+
+  int light = analogRead(A0);
+  int scaledLight = map(light, 0, 1023, 0, 100);
+  Serial.println(scaledLight);
+  Serial.print(",");
+  if (scaledLight < 50) {
+    if (cutain_flag == 0) {
+      if (lightstart == 0) {
+        lightstart = millis();
+      }
+      if (millis() - lightstart >= lightdelay) {
+        servo.write(100);
+        cutain_flag = 1;
+        lightclose = 0;
+      }
+    }
+  } else {
+    if (cutain_flag == 1) {
+      if (lightclose == 0) {
+        lightclose = millis();
+      }
+      if (millis() - lightclose >= lightdelay) {
+        servo.write(10);
+        cutain_flag = 0;
+        lightstart = 0;
+      }
+    }
+    if (Serial.available() > 0) {
+      int angle = Serial.parseInt();  // 시리얼 포트로부터 각도를 읽음
+      servo.write(angle);             // 서보모터를 해당 각도로 회전
+    }
+  }
+  ///////////////////////////////////////////////////////////////////////////////////
+  Serial.print("1번");
+  DHT.read(DHT11_PIN);  // 만악의 근원
+  Serial.print("2번");
+  int temperature = DHT.temperature;
+  int humidity = DHT.humidity;
+  Serial.print(temperature);
+  Serial.print(",");
+  Serial.println(humidity);
+
+  // if (DHT.temperature <= 26 || DHT.temperature >= 28)
+  if (DHT.humidity <= 40 || DHT.humidity >= 50) {
+    digitalWrite(fan, HIGH);
+    fan_on = true;
+  } else if (fan_on) {
+    digitalWrite(fan, LOW);
+    fan_on = false;
+  }
+  if (Serial.available() > 0) {
+    char command = Serial.read();
+    if (command == '1') {
+      digitalWrite(fan, HIGH);
+      fan_on = true;
+    } else if (command == '0') {
+      digitalWrite(fan, LOW);
+      fan_on = false;
+    }
+  }
+  control_fan_based_on_humidity();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // put your main code here, to run repeatedly:
   int value = digitalRead(PIR);
-  if (value) {
-    pirstate = true;
-    flag = true;
-  }
+
+  // Serial.println(value);
+
   if (buttonPress() == true) {
     if (rfid_status == RFID_STATUS::REGISTRATION) {
       rfid_status = RFID_STATUS::VERIFICATION;
@@ -255,8 +230,16 @@ void loop() {
   } else {
     cardDetected = false;
   }
+  if (value) {
+    pirstate = true;
+    flag = true;
+    digitalWrite(LED, HIGH);
+  } else {
+    digitalWrite(LED, LOW);
+  }
   if (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true) {  // rfid_status == VERIFICATION
     if (pirstate) {
+
       person_count--;
       cardDetected = false;
       pirstate = false;
@@ -266,37 +249,80 @@ void loop() {
       if (person_count < 0) {
         person_count = 0;
       }
-      delay(200);
+      delay(100);
     }
     // Serial.println(flag);
     while (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true && pirstate == false && flag == true) {
-      // Serial.println("while문 입장");
+      Serial.println("while문 입장");
+      int value = digitalRead(PIR);
       if (value) {
+        Serial.print("pir 값: ");
+        Serial.println(pirstate);
         person_count++;
         cardDetected = false;
         pirstate = false;
         flag = false;
         // Serial.print("증가: ");
         // Serial.println(person_count);
+        delay(100);
         break;
       }
     }
+    Serial.println("탈출");
   }
-  buzz_operation();
-  air_sensor();
   delay(100);
+  Serial.print("인원 수 :");
   Serial.println(person_count);
   flag = true;
-
-  unsigned long currentMillis = millis();  // 현재 시간을 가져옵니다.
-  
-  if (currentMillis - previousMillis >= interval) 
-  {
-    previousMillis = currentMillis;  // 이전 시간을 업데이트합니다.
-    read_sensor_data();
-    control_fan();
-  }
-  control_fan_gui();
 }
 
 //////////////////
+
+void control_fan_based_on_humidity() {
+  if (DHT.humidity <= 40 || DHT.humidity >= 50) {
+    digitalWrite(fan, HIGH);
+    fan_on = true;
+  } else if (fan_on) {
+    digitalWrite(fan, LOW);
+    fan_on = false;
+  }
+}
+
+void read_sensor_data() {
+  DHT.read(DHT11_PIN);
+  auto_temperature = DHT.temperature;
+  humidity = DHT.humidity;
+
+  Serial.print("temperature : ");
+  Serial.print(auto_temperature);
+  Serial.print(" , ");
+  Serial.print("humidity : ");
+  Serial.println(humidity);
+  Serial.println();
+}
+
+void control_fan() {
+  if (auto_temperature == 27) {
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= 3000) {
+      analogWrite(fan, 0);
+      fan_on = false;
+    }
+  } else {
+    analogWrite(fan, 150);
+    fan_on = true;
+  }
+}
+
+void control_fan_gui() {
+  if (Serial.available() > 0) {
+    char command = Serial.read();
+    if (command == '1') {
+      analogWrite(fan, 150);
+      fan_on = true;
+    } else if (command == '0') {
+      analogWrite(fan, 0);
+      fan_on = false;
+    }
+  }
+}
