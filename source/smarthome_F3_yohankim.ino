@@ -129,4 +129,4 @@ void loop() {
   Serial.println(person_count);
   flag = true;
 }
-// 버튼과 rfid를 활용한 집 내부 사람 수 체크 완료
+// 버튼과 rfid를 활용한 집 내부 사람 수 체크 완료1
