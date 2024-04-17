@@ -9,6 +9,7 @@ const int BUTTON = 5;
 const int RST_PIN = 9;
 const int SS_PIN = 10;
 const int PIR = 6;
+const int LED = 4;
 int cardDetected = false;
 int pirstate = false;
 int person_count = 0;
@@ -65,6 +66,7 @@ void setup() {
   Serial.println("[STATUS] Registration");
   pinMode(BUTTON, INPUT_PULLUP);
   pinMode(PIR, INPUT);
+  pinMode(LED, OUTPUT);
 }
 /////////////
 
@@ -73,10 +75,9 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   int value = digitalRead(PIR);
-  if (value) {
-    pirstate = true;
-    flag = true;
-  }
+  
+  // Serial.println(value);
+
   if (buttonPress() == true) {
     if (rfid_status == RFID_STATUS::REGISTRATION) {
       rfid_status = RFID_STATUS::VERIFICATION;
@@ -105,8 +106,16 @@ void loop() {
   } else {
     cardDetected = false;
   }
+  if (value) {
+    pirstate = true;
+    flag = true;
+    digitalWrite(LED, HIGH);
+  } else {
+    digitalWrite(LED, LOW);
+  }
   if (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true) {  // rfid_status == VERIFICATION
     if (pirstate) {
+
       person_count--;
       cardDetected = false;
       pirstate = false;
@@ -116,23 +125,29 @@ void loop() {
       if (person_count < 0) {
         person_count = 0;
       }
-      delay(200);
+      delay(100);
     }
     // Serial.println(flag);
     while (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true && pirstate == false && flag == true) {
-      // Serial.println("while문 입장");
+      Serial.println("while문 입장");
+      int value = digitalRead(PIR);
       if (value) {
+        Serial.print("pir 값: ");
+        Serial.println(pirstate);
         person_count++;
         cardDetected = false;
         pirstate = false;
         flag = false;
         // Serial.print("증가: ");
         // Serial.println(person_count);
+        delay(100);
         break;
       }
     }
+    Serial.println("탈출");
   }
   delay(100);
+  Serial.print("인원 수 :");
   Serial.println(person_count);
   flag = true;
 }
