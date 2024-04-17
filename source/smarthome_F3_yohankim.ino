@@ -5,11 +5,18 @@ const int BUTTON1 = 2;
 const int BUTTON2 = 3;
 const int RST_PIN = 9;
 const int SS_PIN = 10;
+const int LED1 = 5;
+const int LED2 = 4;
+
+int led1state = 0;
+int led2state = 1;
 int cardDetected = false;
 int buttonstatus = false;
 int person_count = 0;
 int count = 0;
 int flag = 1;
+int home_mode = 0; // 1:외출, 2:자동, 3:수동
+
 // Qt의 상태값
 typedef enum {
   REGISTRATION = 0,
@@ -61,9 +68,31 @@ void setup() {
   Serial.println("[STATUS] Registration");
   pinMode(BUTTON1, INPUT_PULLUP);
   pinMode(BUTTON2, INPUT_PULLUP);
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+
 }
 void loop() {
   //
+  digitalWrite(LED1, led1state);
+  digitalWrite(LED2, led2state);
+  Serial.print("사람 수: "); Serial.println(person_count);
+  Serial.print("모드: "); Serial.println(home_mode);
+  if (person_count > 0){
+    home_mode = 1;
+  } else {
+    home_mode = 0;
+  }
+  
+
+  if (home_mode == 1) {
+    led1state = 1;
+    led2state = 1;
+  } else {
+    led1state = 0;
+    led2state = 0;
+  }
+  
   if (buttonPress2()) {
     buttonstatus = true;
     flag = true;
@@ -109,7 +138,7 @@ void loop() {
       if (person_count < 0) {
         person_count = 0;
       }
-      delay(200);
+      delay(100);
     }
     // Serial.println(flag);
     while (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true && buttonstatus == false && flag == true) {
@@ -126,7 +155,8 @@ void loop() {
     }
   }
   delay(100);
-  Serial.println(person_count);
   flag = true;
+
+
 }
-// 버튼과 rfid를 활용한 집 내부 사람 수 체크 완료
+// 버튼과 rfid를 활용한 집 내부 사람 수 체크 완료 
