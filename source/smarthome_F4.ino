@@ -1,4 +1,4 @@
-////////////// 라이브러리 입력란
+/* library */
 #include <SPI.h>
 #include <MFRC522.h>
 #include <List.hpp>
@@ -6,20 +6,28 @@
 #include <DFRobot_DHT11.h>
 //////////////
 
-/////////// 변수 입력란
+/* pin information */
 const int R_LED = 2;
 const int G_LED = 3;
-
+// const int B_LED = 4;
 const int buzzer = 4;
-const int FAN = A2; // replace air cleaner with fan
+const int dustFan = A2; // replace air cleaner with fan
 const int dustSensor = A3;
 const int MQ135 = A4;
 const int MQ2 = A5;
 
 const int BUTTON = 5;
+const int PIR = 6;
 const int RST_PIN = 9;
 const int SS_PIN = 10;
-const int PIR = 6;
+
+const int airFan = 7;
+const int DHT11_PIN = A1;
+
+const int servo_pin = 8; 
+
+/* variable */
+
 int cardDetected = false;
 int pirstate = false;
 int person_count = 0;
@@ -29,9 +37,7 @@ const long interval = 500;
 int auto_temperature;
 int humidity; 
 DFRobot_DHT11 DHT;
-const int DHT11_PIN = A1;
-const int fan = 7;
-const int btn = A2;
+
 bool fan_on = false;
 
 int cutain_flag = 1;
@@ -45,29 +51,29 @@ const int COLOR[][3] = {
     {200, 150, 0},  // Orange
     {200, 200, 0},  // Yellow
     {0, 200, 0},    // Green
-    {0, 0, 20}     // Blue
+    {0, 0, 200}     // Blue
 };
 
 int dustLevel = 0;
 int gasLevel =0 ;
+int flammableGasLevel =0;
 String quality = "";
 
-int sensorThres = 200; // 소리뻠삥
+int sensorThres = 200; // flammableGas 기준 변경 가능
 
-int flammableGasLevel =0;
 
 typedef enum {
   REGISTRATION = 0,
   VERIFICATION
 } RFID_STATUS;
+
 MFRC522 rc522(SS_PIN, RST_PIN);
 RFID_STATUS rfid_status;
 // 등록된 카드를 저장할 tag_list
 List<MFRC522::Uid> tag_list;
-///////////
 
 
-/////////// 입력하쇼
+/* function */
 int buttonPress() {
   int press;
   int buttonState;
@@ -78,7 +84,6 @@ int buttonPress() {
   return press;
 }
 
-
 void printUID(MFRC522::Uid uid) {
   for (byte i = 0; i < 4; i++) {
     Serial.print(uid.uidByte[i] < 0x10 ? " 0" : " ");
@@ -86,6 +91,7 @@ void printUID(MFRC522::Uid uid) {
   }
   Serial.println();
 }
+
 bool checkUID(MFRC522::Uid uid) {
   for (int i = 0; i < tag_list.getSize(); i++) {
     if (memcmp(tag_list.get(i).uidByte, rc522.uid.uidByte, 4) == 0) {
@@ -95,7 +101,6 @@ bool checkUID(MFRC522::Uid uid) {
   return false;
 }
 
-
 void air_sensor(){
    dustLevel = analogRead(dustSensor);
    gasLevel = analogRead(MQ135);
@@ -103,36 +108,36 @@ void air_sensor(){
     quality = "Very GOOD!";
      analogWrite(R_LED, COLOR[4][0]);
      analogWrite(G_LED, COLOR[4][1]);
-    //  analogWrite(B_LED, COLOR[4][2]);
-     analogWrite(FAN, 0);
+    //analogWrite(B_LED, COLOR[4][2]);
+     analogWrite(dustFan, 0);
   }
    else if(dustLevel<300){
      quality = "GOOD!";
      analogWrite(R_LED, COLOR[3][0]);
      analogWrite(G_LED, COLOR[3][1]);
-    //  analogWrite(B_LED, COLOR[3][2]);
-     analogWrite(FAN, 0);
+    //analogWrite(B_LED, COLOR[3][2]);
+     analogWrite(dustFan, 0);
    }
    else if (dustLevel<450){
      quality = "Poor!";
      analogWrite(R_LED, COLOR[2][0]);
      analogWrite(G_LED, COLOR[2][1]);
-    //  analogWrite(B_LED, COLOR[2][2]);
-     analogWrite(FAN, 150);
+    //analogWrite(B_LED, COLOR[2][2]);
+     analogWrite(dustFan, 150);
    }
    else if (dustLevel<600){
      quality  = "Very bad!";
      analogWrite(R_LED, COLOR[1][0]);
      analogWrite(G_LED, COLOR[1][1]);
-    //  analogWrite(B_LED, COLOR[1][2]);
-     analogWrite(FAN, 150);
+    //analogWrite(B_LED, COLOR[1][2]);
+     analogWrite(dustFan, 150);
    }
    else{
      quality = "Toxic";
      analogWrite(R_LED, COLOR[0][0]);
      analogWrite(G_LED, COLOR[0][1]);
-    //  analogWrite(B_LED, COLOR[0][2]);
-     analogWrite(FAN, 150);
+    //analogWrite(B_LED, COLOR[0][2]);
+     analogWrite(dustFan, 150);
    }
   Serial.print("dust level : ");
   Serial.println(dustLevel);
@@ -140,6 +145,7 @@ void air_sensor(){
   Serial.print("gas level : ");
   Serial.println(gasLevel);
 }
+
 void buzz_operation(){
   flammableGasLevel = analogRead(MQ2);
   Serial.print("flammableGasLevel : ");
@@ -153,12 +159,56 @@ void buzz_operation(){
   }
 }
 
+void control_fan_based_on_humidity() {
+  if (DHT.humidity <= 40 || DHT.humidity >= 50) {
+    digitalWrite(airFan, HIGH);
+    fan_on = true;
+  } else if (fan_on) {
+    digitalWrite(airFan, LOW);
+    fan_on = false;
+  }
+}
 
+void read_sensor_data() {
+  DHT.read(DHT11_PIN);
+  auto_temperature = DHT.temperature;
+  humidity = DHT.humidity;
 
+  Serial.print("temperature : ");
+  Serial.print(auto_temperature);
+  Serial.print(" , ");
+  Serial.print("humidity : ");
+  Serial.println(humidity);
+  Serial.println();
+}
 
-//////////
+void control_fan() {
+  if (auto_temperature == 27) {
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= 3000) {
+      analogWrite(airFan, 0);
+      fan_on = false;
+    }
+  } else {
+    analogWrite(airFan, 150);
+    fan_on = true;
+  }
+}
 
-////////// setup문
+void control_fan_gui() {
+  if (Serial.available() > 0) {
+    char command = Serial.read();
+    if (command == '1') {
+      analogWrite(airFan, 150);
+      fan_on = true;
+    } else if (command == '0') {
+      analogWrite(airFan, 0);
+      fan_on = false;
+    }
+  }
+}
+
+/* set up */ 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -169,9 +219,8 @@ void setup() {
   pinMode(BUTTON, INPUT_PULLUP);
   pinMode(PIR, INPUT);
 
-  pinMode(btn, INPUT);
-  pinMode(fan, OUTPUT);
-  servo.attach(8);
+  pinMode(airFan, OUTPUT);
+  servo.attach(servo_pin);
   servo.write(10);
 
   pinMode(dustSensor, INPUT);
@@ -180,20 +229,11 @@ void setup() {
   pinMode(buzzer, OUTPUT);
 
 }
-/////////////
 
-
-///////////// loop문
+/* loop */
 void loop() {
   air_sensor();
   buzz_operation();
-
-
-
-
-
-
-
 
   unsigned long currentMillis = millis();  // 현재 시간을 가져옵니다.
 
@@ -203,14 +243,6 @@ void loop() {
     control_fan();
   }
   control_fan_gui();
-
-
-
-
-
-
-
-
 
 
   int light = analogRead(A0);
@@ -244,7 +276,10 @@ void loop() {
       servo.write(angle);             // 서보모터를 해당 각도로 회전
     }
   }
+
+
   ///////////////////////////////////////////////////////////////////////////////////
+
   Serial.print("1번");
   DHT.read(DHT11_PIN);  // 만악의 근원
   Serial.print("2번");
@@ -256,34 +291,23 @@ void loop() {
 
   // if (DHT.temperature <= 26 || DHT.temperature >= 28)
   if (DHT.humidity <= 40 || DHT.humidity >= 50) {
-    digitalWrite(fan, HIGH);
+    digitalWrite(airFan, HIGH);
     fan_on = true;
   } else if (fan_on) {
-    digitalWrite(fan, LOW);
+    digitalWrite(airFan, LOW);
     fan_on = false;
   }
   if (Serial.available() > 0) {
     char command = Serial.read();
     if (command == '1') {
-      digitalWrite(fan, HIGH);
+      digitalWrite(airFan, HIGH);
       fan_on = true;
     } else if (command == '0') {
-      digitalWrite(fan, LOW);
+      digitalWrite(airFan, LOW);
       fan_on = false;
     }
   }
   control_fan_based_on_humidity();
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -364,53 +388,4 @@ void loop() {
   flag = true;
 }
 
-//////////////////
 
-void control_fan_based_on_humidity() {
-  if (DHT.humidity <= 40 || DHT.humidity >= 50) {
-    digitalWrite(fan, HIGH);
-    fan_on = true;
-  } else if (fan_on) {
-    digitalWrite(fan, LOW);
-    fan_on = false;
-  }
-}
-
-void read_sensor_data() {
-  DHT.read(DHT11_PIN);
-  auto_temperature = DHT.temperature;
-  humidity = DHT.humidity;
-
-  Serial.print("temperature : ");
-  Serial.print(auto_temperature);
-  Serial.print(" , ");
-  Serial.print("humidity : ");
-  Serial.println(humidity);
-  Serial.println();
-}
-
-void control_fan() {
-  if (auto_temperature == 27) {
-    unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= 3000) {
-      analogWrite(fan, 0);
-      fan_on = false;
-    }
-  } else {
-    analogWrite(fan, 150);
-    fan_on = true;
-  }
-}
-
-void control_fan_gui() {
-  if (Serial.available() > 0) {
-    char command = Serial.read();
-    if (command == '1') {
-      analogWrite(fan, 150);
-      fan_on = true;
-    } else if (command == '0') {
-      analogWrite(fan, 0);
-      fan_on = false;
-    }
-  }
-}
