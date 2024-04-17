@@ -4,16 +4,37 @@
 #include <List.hpp>
 //////////////
 
-/////////// 변수 입력란
+/////////// pin 입력란
 const int BUTTON = 5;
 const int RST_PIN = 9;
 const int SS_PIN = 10;
 const int PIR = 6;
-const int LED = 4;
+const int R_LED = 2;
+const int B_LED = 3;
+const int G_LED = 4;
+const int buzzer = 6; // conflict?
+const int FAN = A2; // replace air cleaner with fan
+const int dustSensor = A3;
+const int MQ135 = A4;
+const int MQ2 = A5;
+
+/////////// 변수 입력란
 int cardDetected = false;
 int pirstate = false;
 int person_count = 0;
 bool flag = true;
+const int COLOR[][3] = {
+    {200, 0, 0},    // Red
+    {200, 150, 0},  // Orange
+    {200, 200, 0},  // Yellow
+    {0, 200, 0},    // Green
+    {0, 0, 20}     // Blue
+};
+int dustLevel = 0;
+int gasLevel =0 ;
+String quality = "";
+int sensorThres = 170;
+int flammableGasLevel =0;
 
 typedef enum {
   REGISTRATION = 0,
@@ -26,7 +47,70 @@ List<MFRC522::Uid> tag_list;
 ///////////
 
 
-/////////// 입력하쇼
+/////////// 함수 입력하쇼
+void buzz_operation(){
+  flammableGasLevel = analogRead(MQ2);
+
+  Serial.print("Pin A0: ");
+  Serial.println(flammableGasLevel);
+  
+  // Checks if it has reached the threshold value
+  if (flammableGasLevel > sensorThres){
+    
+    tone(buzzer, 1000, 200);
+  }
+  else{
+    noTone(buzzer);
+  }
+}
+
+void air_sensor(){
+   dustLevel = analogRead(dustSensor);
+   gasLevel = analogRead(MQ135);
+
+  if(dustLevel<150){
+    quality = "Very GOOD!";
+     analogWrite(R_LED, COLOR[4][0]);
+     analogWrite(G_LED, COLOR[4][1]);
+     analogWrite(B_LED, COLOR[4][2]);
+     analogWrite(FAN, 0);
+  }
+   else if(dustLevel<300){
+     quality = "GOOD!";
+     analogWrite(R_LED, COLOR[3][0]);
+     analogWrite(G_LED, COLOR[3][1]);
+     analogWrite(B_LED, COLOR[3][2]);
+     analogWrite(FAN, 0);
+   }
+      
+   else if (dustLevel<450){
+     quality = "Poor!";
+     analogWrite(R_LED, COLOR[2][0]);
+     analogWrite(G_LED, COLOR[2][1]);
+     analogWrite(B_LED, COLOR[2][2]);
+     analogWrite(FAN, 150);
+   }
+   else if (dustLevel<600){
+     quality  = "Very bad!";
+     analogWrite(R_LED, COLOR[1][0]);
+     analogWrite(G_LED, COLOR[1][1]);
+     analogWrite(B_LED, COLOR[1][2]);
+     analogWrite(FAN, 150);
+   }
+   else{
+     quality = "Toxic";
+     analogWrite(R_LED, COLOR[0][0]);
+     analogWrite(G_LED, COLOR[0][1]);
+     analogWrite(B_LED, COLOR[0][2]);
+     analogWrite(FAN, 150);
+   }
+  Serial.print("dust level : ");
+  Serial.println(dustLevel);
+  // Serial.println(quality);
+  Serial.print("gas level : ");
+  Serial.println(gasLevel);
+}
+
 int buttonPress() {
   int press;
   int buttonState;
@@ -37,7 +121,6 @@ int buttonPress() {
   return press;
 }
 
-
 void printUID(MFRC522::Uid uid) {
   for (byte i = 0; i < 4; i++) {
     Serial.print(uid.uidByte[i] < 0x10 ? " 0" : " ");
@@ -45,6 +128,7 @@ void printUID(MFRC522::Uid uid) {
   }
   Serial.println();
 }
+
 bool checkUID(MFRC522::Uid uid) {
   for (int i = 0; i < tag_list.getSize(); i++) {
     if (memcmp(tag_list.get(i).uidByte, rc522.uid.uidByte, 4) == 0) {
@@ -66,7 +150,12 @@ void setup() {
   Serial.println("[STATUS] Registration");
   pinMode(BUTTON, INPUT_PULLUP);
   pinMode(PIR, INPUT);
-  pinMode(LED, OUTPUT);
+  pinMode(dustSensor, INPUT);
+  pinMode(MQ2, INPUT);
+  pinMode(MQ135, INPUT);
+  
+  pinMode(buzzer, OUTPUT);
+
 }
 /////////////
 
@@ -75,9 +164,10 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   int value = digitalRead(PIR);
-  
-  // Serial.println(value);
-
+  if (value) {
+    pirstate = true;
+    flag = true;
+  }
   if (buttonPress() == true) {
     if (rfid_status == RFID_STATUS::REGISTRATION) {
       rfid_status = RFID_STATUS::VERIFICATION;
@@ -106,16 +196,8 @@ void loop() {
   } else {
     cardDetected = false;
   }
-  if (value) {
-    pirstate = true;
-    flag = true;
-    digitalWrite(LED, HIGH);
-  } else {
-    digitalWrite(LED, LOW);
-  }
   if (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true) {  // rfid_status == VERIFICATION
     if (pirstate) {
-
       person_count--;
       cardDetected = false;
       pirstate = false;
@@ -125,29 +207,25 @@ void loop() {
       if (person_count < 0) {
         person_count = 0;
       }
-      delay(100);
+      delay(200);
     }
     // Serial.println(flag);
     while (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true && pirstate == false && flag == true) {
-      Serial.println("while문 입장");
-      int value = digitalRead(PIR);
+      // Serial.println("while문 입장");
       if (value) {
-        Serial.print("pir 값: ");
-        Serial.println(pirstate);
         person_count++;
         cardDetected = false;
         pirstate = false;
         flag = false;
         // Serial.print("증가: ");
         // Serial.println(person_count);
-        delay(100);
         break;
       }
     }
-    Serial.println("탈출");
   }
+  buzz_operation();
+  air_sensor();
   delay(100);
-  Serial.print("인원 수 :");
   Serial.println(person_count);
   flag = true;
 }
