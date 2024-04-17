@@ -2,6 +2,8 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <List.hpp>
+#include <DFRobot_DHT11.h>
+DFRobot_DHT11 DHT;
 //////////////
 
 /////////// pin 입력란
@@ -13,6 +15,8 @@ const int R_LED = 2;
 const int B_LED = 3;
 const int G_LED = 4;
 const int buzzer = 6; // conflict?
+const int fan = 7;
+const int DHT11_PIN = A1;
 const int FAN = A2; // replace air cleaner with fan
 const int dustSensor = A3;
 const int MQ135 = A4;
@@ -35,6 +39,11 @@ int gasLevel =0 ;
 String quality = "";
 int sensorThres = 170;
 int flammableGasLevel =0;
+bool fan_on = false; 
+unsigned long previousMillis = 0; 
+const long interval = 500; 
+int auto_temperature;
+int humidity; 
 
 typedef enum {
   REGISTRATION = 0,
@@ -138,6 +147,55 @@ bool checkUID(MFRC522::Uid uid) {
   return false;
 }
 
+void read_sensor_data()
+{
+  DHT.read(DHT11_PIN);
+  auto_temperature = DHT.temperature;
+  humidity = DHT.humidity;
+  
+  Serial.print("temperature : ");
+  Serial.print(auto_temperature);
+  Serial.print(" , ");
+  Serial.print("humidity : ");
+  Serial.println(humidity);
+  Serial.println();
+}
+
+void control_fan()
+{
+  if (auto_temperature == 27)
+  {
+    unsigned long currentMillis = millis(); 
+    if (currentMillis - previousMillis >= 3000) 
+    { 
+      analogWrite(fan, 0); 
+      fan_on = false; 
+    }
+  }
+  else 
+  {
+    analogWrite(fan, 150);
+    fan_on = true; 
+  }
+}
+
+void control_fan_gui()
+{
+  if (Serial.available() > 0) 
+  {
+    char command = Serial.read();
+    if (command == '1') 
+    {
+      analogWrite(fan, 150);
+      fan_on = true; 
+    } 
+    else if (command == '0') 
+    {
+      analogWrite(fan, 0); 
+      fan_on = false; 
+    }
+  }
+}
 //////////
 
 ////////// setup문
@@ -155,6 +213,7 @@ void setup() {
   pinMode(MQ135, INPUT);
   
   pinMode(buzzer, OUTPUT);
+  pinMode(fan, OUTPUT);
 
 }
 /////////////
@@ -228,6 +287,16 @@ void loop() {
   delay(100);
   Serial.println(person_count);
   flag = true;
+
+  unsigned long currentMillis = millis();  // 현재 시간을 가져옵니다.
+  
+  if (currentMillis - previousMillis >= interval) 
+  {
+    previousMillis = currentMillis;  // 이전 시간을 업데이트합니다.
+    read_sensor_data();
+    control_fan();
+  }
+  control_fan_gui();
 }
 
 //////////////////
