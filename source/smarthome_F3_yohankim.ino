@@ -1,16 +1,19 @@
+////////////// 라이브러리 입력란
 #include <SPI.h>
 #include <MFRC522.h>
 #include <List.hpp>
-const int BUTTON1 = 2;
-const int BUTTON2 = 3;
+//////////////
+
+/////////// 변수 입력란
+const int BUTTON = 5;
 const int RST_PIN = 9;
 const int SS_PIN = 10;
+const int PIR = 6;
 int cardDetected = false;
-int buttonstatus = false;
+int pirstate = false;
 int person_count = 0;
-int count = 0;
-int flag = 1;
-// Qt의 상태값
+bool flag = true;
+
 typedef enum {
   REGISTRATION = 0,
   VERIFICATION
@@ -19,24 +22,21 @@ MFRC522 rc522(SS_PIN, RST_PIN);
 RFID_STATUS rfid_status;
 // 등록된 카드를 저장할 tag_list
 List<MFRC522::Uid> tag_list;
-int buttonPress1() {
+///////////
+
+
+/////////// 입력하쇼
+int buttonPress() {
   int press;
   int buttonState;
   static int prevButtonState = HIGH;
-  buttonState = digitalRead(BUTTON1);
+  buttonState = digitalRead(BUTTON);
   press = (buttonState == LOW && prevButtonState == HIGH);
   prevButtonState = buttonState;
   return press;
 }
-int buttonPress2() {
-  int press;
-  int buttonState;
-  static int prevButtonState = HIGH;
-  buttonState = digitalRead(BUTTON2);
-  press = (buttonState == LOW && prevButtonState == HIGH);
-  prevButtonState = buttonState;
-  return press;
-}
+
+
 void printUID(MFRC522::Uid uid) {
   for (byte i = 0; i < 4; i++) {
     Serial.print(uid.uidByte[i] < 0x10 ? " 0" : " ");
@@ -52,6 +52,10 @@ bool checkUID(MFRC522::Uid uid) {
   }
   return false;
 }
+
+//////////
+
+////////// setup문
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -59,18 +63,21 @@ void setup() {
   rc522.PCD_Init();
   rfid_status = RFID_STATUS::REGISTRATION;
   Serial.println("[STATUS] Registration");
-  pinMode(BUTTON1, INPUT_PULLUP);
-  pinMode(BUTTON2, INPUT_PULLUP);
+  pinMode(BUTTON, INPUT_PULLUP);
+  pinMode(PIR, INPUT);
 }
+/////////////
+
+
+///////////// loop문
 void loop() {
-  //
-  if (buttonPress2()) {
-    buttonstatus = true;
+  // put your main code here, to run repeatedly:
+  int value = digitalRead(PIR);
+  if (value) {
+    pirstate = true;
     flag = true;
   }
-  // Serial.println(cardDetected);
-  // Serial.println(buttonstatus);
-  if (buttonPress1() == true) {
+  if (buttonPress() == true) {
     if (rfid_status == RFID_STATUS::REGISTRATION) {
       rfid_status = RFID_STATUS::VERIFICATION;
       Serial.println("[STATUS] Verification");
@@ -99,10 +106,10 @@ void loop() {
     cardDetected = false;
   }
   if (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true) {  // rfid_status == VERIFICATION
-    if (buttonstatus) {
+    if (pirstate) {
       person_count--;
       cardDetected = false;
-      buttonstatus = false;
+      pirstate = false;
       flag = false;
       // Serial.print("감소: ");
       // Serial.println(person_count);
@@ -112,12 +119,12 @@ void loop() {
       delay(200);
     }
     // Serial.println(flag);
-    while (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true && buttonstatus == false && flag == true) {
-      Serial.println("while문 입장");
-      if (buttonPress2()) {
+    while (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true && pirstate == false && flag == true) {
+      // Serial.println("while문 입장");
+      if (value) {
         person_count++;
         cardDetected = false;
-        buttonstatus = false;
+        pirstate = false;
         flag = false;
         // Serial.print("증가: ");
         // Serial.println(person_count);
@@ -129,4 +136,5 @@ void loop() {
   Serial.println(person_count);
   flag = true;
 }
-// 버튼과 rfid를 활용한 집 내부 사람 수 체크 완료1
+
+//////////////////
