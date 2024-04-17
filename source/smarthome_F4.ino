@@ -7,11 +7,19 @@
 //////////////
 
 /////////// 변수 입력란
+const int R_LED = 2;
+const int G_LED = 3;
+
+const int buzzer = 4;
+const int FAN = A2; // replace air cleaner with fan
+const int dustSensor = A3;
+const int MQ135 = A4;
+const int MQ2 = A5;
+
 const int BUTTON = 5;
 const int RST_PIN = 9;
 const int SS_PIN = 10;
 const int PIR = 6;
-const int LED = 4;
 int cardDetected = false;
 int pirstate = false;
 int person_count = 0;
@@ -31,6 +39,22 @@ Servo servo;
 unsigned long lightstart = 0;
 unsigned long lightclose = 0;
 const unsigned long lightdelay = 3000;
+
+const int COLOR[][3] = {
+    {200, 0, 0},    // Red
+    {200, 150, 0},  // Orange
+    {200, 200, 0},  // Yellow
+    {0, 200, 0},    // Green
+    {0, 0, 20}     // Blue
+};
+
+int dustLevel = 0;
+int gasLevel =0 ;
+String quality = "";
+
+int sensorThres = 200; // 소리뻠삥
+
+int flammableGasLevel =0;
 
 typedef enum {
   REGISTRATION = 0,
@@ -71,6 +95,67 @@ bool checkUID(MFRC522::Uid uid) {
   return false;
 }
 
+
+void air_sensor(){
+   dustLevel = analogRead(dustSensor);
+   gasLevel = analogRead(MQ135);
+  if(dustLevel<150){
+    quality = "Very GOOD!";
+     analogWrite(R_LED, COLOR[4][0]);
+     analogWrite(G_LED, COLOR[4][1]);
+    //  analogWrite(B_LED, COLOR[4][2]);
+     analogWrite(FAN, 0);
+  }
+   else if(dustLevel<300){
+     quality = "GOOD!";
+     analogWrite(R_LED, COLOR[3][0]);
+     analogWrite(G_LED, COLOR[3][1]);
+    //  analogWrite(B_LED, COLOR[3][2]);
+     analogWrite(FAN, 0);
+   }
+   else if (dustLevel<450){
+     quality = "Poor!";
+     analogWrite(R_LED, COLOR[2][0]);
+     analogWrite(G_LED, COLOR[2][1]);
+    //  analogWrite(B_LED, COLOR[2][2]);
+     analogWrite(FAN, 150);
+   }
+   else if (dustLevel<600){
+     quality  = "Very bad!";
+     analogWrite(R_LED, COLOR[1][0]);
+     analogWrite(G_LED, COLOR[1][1]);
+    //  analogWrite(B_LED, COLOR[1][2]);
+     analogWrite(FAN, 150);
+   }
+   else{
+     quality = "Toxic";
+     analogWrite(R_LED, COLOR[0][0]);
+     analogWrite(G_LED, COLOR[0][1]);
+    //  analogWrite(B_LED, COLOR[0][2]);
+     analogWrite(FAN, 150);
+   }
+  Serial.print("dust level : ");
+  Serial.println(dustLevel);
+  // Serial.println(quality);
+  Serial.print("gas level : ");
+  Serial.println(gasLevel);
+}
+void buzz_operation(){
+  flammableGasLevel = analogRead(MQ2);
+  Serial.print("flammableGasLevel : ");
+  Serial.println(flammableGasLevel);
+  // Checks if it has reached the threshold value
+  if (flammableGasLevel > sensorThres){
+    tone(buzzer, 1000, 200);
+  }
+  else{
+    noTone(buzzer);
+  }
+}
+
+
+
+
 //////////
 
 ////////// setup문
@@ -83,20 +168,25 @@ void setup() {
   Serial.println("[STATUS] Registration");
   pinMode(BUTTON, INPUT_PULLUP);
   pinMode(PIR, INPUT);
-  pinMode(LED, OUTPUT);
 
   pinMode(btn, INPUT);
   pinMode(fan, OUTPUT);
   servo.attach(8);
   servo.write(10);
+
+  pinMode(dustSensor, INPUT);
+  pinMode(MQ2, INPUT);
+  pinMode(MQ135, INPUT);
+  pinMode(buzzer, OUTPUT);
+
 }
 /////////////
 
 
 ///////////// loop문
 void loop() {
-
-
+  air_sensor();
+  buzz_operation();
 
 
 
@@ -233,9 +323,7 @@ void loop() {
   if (value) {
     pirstate = true;
     flag = true;
-    digitalWrite(LED, HIGH);
   } else {
-    digitalWrite(LED, LOW);
   }
   if (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true) {  // rfid_status == VERIFICATION
     if (pirstate) {
