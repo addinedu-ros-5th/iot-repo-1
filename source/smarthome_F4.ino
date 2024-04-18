@@ -19,17 +19,17 @@ const int RST_PIN = 9;
 const int SS_PIN = 10;
 const int airFan = 7;
 const int DHT11_PIN = A1;
-const int servo_pin = 8; 
+const int servo_pin = 8;
 
 /* 변수 */
 int cardDetected = false;
 int pirstate = false;
 int person_count = 0;
 bool flag = true;
-unsigned long previousMillis = 0; 
-const long interval = 500; 
+unsigned long previousMillis = 0;
+const long interval = 500;
 int auto_temperature;
-int humidity; 
+int humidity;
 DFRobot_DHT11 DHT;
 
 bool fan_on = false;
@@ -39,11 +39,11 @@ unsigned long lightstart = 0;
 unsigned long lightclose = 0;
 const unsigned long lightdelay = 3000;
 const int COLOR[][3] = {
-    {200, 0, 0},    // Red
-    {200, 150, 0},  // Orange
-    {200, 200, 0},  // Yellow
-    {0, 200, 0},    // Green
-    {0, 0, 200}     // Blue
+  { 200, 0, 0 },    // Red
+  { 200, 150, 0 },  // Orange
+  { 200, 200, 0 },  // Yellow
+  { 0, 200, 0 },    // Green
+  { 0, 0, 200 }     // Blue
 };
 int dustLevel = 0;
 int gasLevel = 0;
@@ -87,16 +87,35 @@ void setup() {
 
 /* 루프 */
 void loop() {
-  // detectMotion();
+
+  detectMotion();
+  Serial.print("PIR : ");
+  Serial.print(pirstate);
+
   countPeople();
   controlVentilation();
   buzz_operation();
   controlCurtain();
   readTemperatureHumidity();
   manualControlAirconditioner();
+  Serial.println();
 }
 
 /* 함수 구현 */
+
+// 모션 감지 센서 함수
+void detectMotion() {
+  int value = digitalRead(PIR);
+  if (value) {
+    pirstate = true;
+    flag = true;
+    lightstart = millis();
+  } else {
+    if (millis() - lightstart >= lightdelay) {
+      pirstate = false;
+    }
+  }
+}
 
 // 유동 인구 체크 함수
 void countPeople() {
@@ -140,8 +159,9 @@ void countPeople() {
     flag = true;
   } else {
   }
-  if (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true) {  // rfid_status == VERIFICATION
-    if (pirstate) {
+  if (pirstate) {
+    if (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true)  // rfid_status == VERIFICATION
+    {
 
       person_count--;
       cardDetected = false;
@@ -156,11 +176,10 @@ void countPeople() {
     }
     // Serial.println(flag);
     while (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true && pirstate == false && flag == true) {
-      Serial.println("while문 입장");
       int value = digitalRead(PIR);
       if (value) {
         Serial.print("pir 값: ");
-        Serial.println(pirstate);
+        Serial.print(pirstate);
         person_count++;
         cardDetected = false;
         pirstate = false;
@@ -168,14 +187,13 @@ void countPeople() {
         // Serial.print("증가: ");
         // Serial.println(person_count);
         delay(100);
-        break;
       }
     }
     Serial.println("탈출");
   }
   delay(100);
   Serial.print("인원 수 :");
-  Serial.println(person_count);
+  Serial.print(person_count);
   flag = true;
 }
 
@@ -209,22 +227,21 @@ void controlVentilation() {
     analogWrite(G_LED, COLOR[0][1]);
     analogWrite(dustFan, 150);
   }
-  Serial.print("dust level : ");
-  Serial.println(dustLevel);
-  Serial.print("gas level : ");
-  Serial.println(gasLevel);
+  Serial.print(", dust level : ");
+  Serial.print(dustLevel);
+  Serial.print(", gas level : ");
+  Serial.print(gasLevel);
 }
 
 // 부저 알림 함수
-void buzz_operation(){
+void buzz_operation() {
   flammableGasLevel = analogRead(MQ2);
-  Serial.print("flammableGasLevel : ");
-  Serial.println(flammableGasLevel);
+  Serial.print(", flammableGasLevel : ");
+  Serial.print(flammableGasLevel);
   // Checks if it has reached the threshold value
-  if (flammableGasLevel > sensorThres){
+  if (flammableGasLevel > sensorThres) {
     tone(buzzer, 1000, 200);
-  }
-  else{
+  } else {
     noTone(buzzer);
   }
 }
@@ -233,7 +250,7 @@ void buzz_operation(){
 void controlCurtain() {
   int light = analogRead(A0);
   int scaledLight = map(light, 0, 1023, 0, 100);
-  Serial.println(scaledLight);
+  Serial.print(scaledLight);
   Serial.print(",");
   if (scaledLight < 50) {
     if (cutain_flag == 0) {
@@ -269,11 +286,11 @@ void readTemperatureHumidity() {
   DHT.read(DHT11_PIN);
   auto_temperature = DHT.temperature;
   humidity = DHT.humidity;
-  Serial.print("temperature : ");
+  Serial.print(" temperature : ");
   Serial.print(auto_temperature);
   Serial.print(" , ");
   Serial.print("humidity : ");
-  Serial.println(humidity);
+  Serial.print(humidity);
 }
 
 // 입력값에 따른 에어컨 제어 함수
