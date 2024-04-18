@@ -66,7 +66,7 @@ void countPeople();
 void controlVentilation();
 void controlCurtain();
 void readTemperatureHumidity();
-void manualControlCurtain();
+void manualControlAirconditioner();
 
 /* 설정 */
 void setup() {
@@ -87,48 +87,99 @@ void setup() {
 
 /* 루프 */
 void loop() {
-  detectMotion();
+  // detectMotion();
   countPeople();
   controlVentilation();
+  buzz_operation();
   controlCurtain();
   readTemperatureHumidity();
-  manualControlCurtain();
+  manualControlAirconditioner();
 }
 
 /* 함수 구현 */
-void detectMotion() {
+
+// 유동 인구 체크 함수
+void countPeople() {
   int value = digitalRead(PIR);
+  // if (value) {
+  //   pirstate = true;
+  //   flag = true;
+  // }
+  // Serial.println(value);
+
+  if (buttonPress() == true) {
+    if (rfid_status == RFID_STATUS::REGISTRATION) {
+      rfid_status = RFID_STATUS::VERIFICATION;
+      Serial.println("[STATUS] Verification");
+    } else {
+      rfid_status = RFID_STATUS::REGISTRATION;
+      Serial.println("[STATUS] Registration");
+    }
+  }
+  if (!rc522.PICC_IsNewCardPresent()) {
+    return;
+  }
+  if (!rc522.PICC_ReadCardSerial()) {
+    return;
+  }
+  if (rfid_status == RFID_STATUS::REGISTRATION) {
+    if (checkUID(rc522.uid) == false) {
+      tag_list.addLast(rc522.uid);
+      Serial.print("Registration Tag : ");
+      tag_list.addLast(rc522.uid);
+      printUID(rc522.uid);
+    }
+  }
+  if (checkUID(rc522.uid)) {
+    cardDetected = true;
+  } else {
+    cardDetected = false;
+  }
   if (value) {
     pirstate = true;
     flag = true;
+  } else {
   }
-}
-
-void countPeople() {
-  if (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true) {
+  if (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true) {  // rfid_status == VERIFICATION
     if (pirstate) {
+
       person_count--;
       cardDetected = false;
       pirstate = false;
       flag = false;
+      // Serial.print("감소: ");
+      // Serial.println(person_count);
       if (person_count < 0) {
         person_count = 0;
       }
+      delay(100);
     }
+    // Serial.println(flag);
     while (rfid_status == RFID_STATUS::VERIFICATION && cardDetected == true && pirstate == false && flag == true) {
+      Serial.println("while문 입장");
       int value = digitalRead(PIR);
       if (value) {
+        Serial.print("pir 값: ");
+        Serial.println(pirstate);
         person_count++;
         cardDetected = false;
         pirstate = false;
         flag = false;
+        // Serial.print("증가: ");
+        // Serial.println(person_count);
         delay(100);
         break;
       }
     }
+    Serial.println("탈출");
   }
+  delay(100);
+  Serial.print("인원 수 :");
+  Serial.println(person_count);
+  flag = true;
 }
 
+// 먼지 센서에 따른 LED 제어 함수
 void controlVentilation() {
   dustLevel = analogRead(dustSensor);
   gasLevel = analogRead(MQ135);
@@ -164,6 +215,21 @@ void controlVentilation() {
   Serial.println(gasLevel);
 }
 
+// 부저 알림 함수
+void buzz_operation(){
+  flammableGasLevel = analogRead(MQ2);
+  Serial.print("flammableGasLevel : ");
+  Serial.println(flammableGasLevel);
+  // Checks if it has reached the threshold value
+  if (flammableGasLevel > sensorThres){
+    tone(buzzer, 1000, 200);
+  }
+  else{
+    noTone(buzzer);
+  }
+}
+
+// 조도센서 값에 따른 커튼 제어 함수
 void controlCurtain() {
   int light = analogRead(A0);
   int scaledLight = map(light, 0, 1023, 0, 100);
@@ -198,6 +264,7 @@ void controlCurtain() {
   }
 }
 
+// 온습도 값 출력 함수
 void readTemperatureHumidity() {
   DHT.read(DHT11_PIN);
   auto_temperature = DHT.temperature;
@@ -209,7 +276,8 @@ void readTemperatureHumidity() {
   Serial.println(humidity);
 }
 
-void manualControlCurtain() {
+// 입력값에 따른 에어컨 제어 함수
+void manualControlAirconditioner() {
   if (Serial.available() > 0) {
     char command = Serial.read();
     if (command == '1') {
@@ -220,4 +288,32 @@ void manualControlCurtain() {
       fan_on = false;
     }
   }
+}
+
+// RFID 모드 변경 버튼 함수
+int buttonPress() {
+  int press;
+  int buttonState;
+  static int prevButtonState = HIGH;
+  buttonState = digitalRead(BUTTON);
+  press = (buttonState == LOW && prevButtonState == HIGH);
+  prevButtonState = buttonState;
+  return press;
+}
+
+// RFID 함수
+void printUID(MFRC522::Uid uid) {
+  for (byte i = 0; i < 4; i++) {
+    Serial.print(uid.uidByte[i] < 0x10 ? " 0" : " ");
+    Serial.print(uid.uidByte[i], HEX);
+  }
+  Serial.println();
+}
+bool checkUID(MFRC522::Uid uid) {
+  for (int i = 0; i < tag_list.getSize(); i++) {
+    if (memcmp(tag_list.get(i).uidByte, rc522.uid.uidByte, 4) == 0) {
+      return true;
+    }
+  }
+  return false;
 }
