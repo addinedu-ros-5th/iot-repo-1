@@ -19,7 +19,7 @@ void setup() {
   SPI.begin();              // SPI 버스 초기화
   rfid.PCD_Init();          // MFRC522 초기화
   servo.attach(SERVO_PIN);  // Servo 모터 초기화
-  Serial.println("RFID reader initialized");
+  // Serial.println("RFID reader initialized");
   servo.write(0);
 }
 
