@@ -4,7 +4,7 @@ import serial
 import json
 
 def receive_data():
-    HOST = '172.30.1.43'  # 두 번째 피시의 IP 주소
+    HOST = '192.168.0.67'  # 두 번째 피시의 IP 주소
     PORT = 12345           # 포트 번호
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
