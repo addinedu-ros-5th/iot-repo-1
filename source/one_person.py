@@ -7,9 +7,40 @@ import serial
 import urllib.request
 import pyqtgraph as pg
 import numpy as np
-
+import time
+import cv2, imutils
+import socket
+import os
+import threading
 
 from_class = uic.loadUiType("one_person.ui")[0]
+
+class ImageClient:
+    def __init__(self):
+        self.host = '192.168.1.189'
+        self.port = 8000
+        
+    def send_image_thread(self, image_path):
+        self.thread = threading.Thread(target=self.send_image, args=(image_path,))
+        self.thread.start()
+        
+    def send_image(self, image_path):
+        try:
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client_socket.connect((self.host, self.port))
+            image_size = os.path.getsize(image_path)
+            size_data = image_size.to_bytes(4, byteorder='big')
+            client_socket.sendall(size_data)
+            with open(image_path, 'rb') as image_file:
+                while True:
+                    image_data = image_file.read(1024)
+                    if not image_data:
+                        break
+                    client_socket.sendall(image_data)
+            print("이미지 데이터를 서버로 전송했습니다.")
+            client_socket.close()
+        except Exception as e:
+            print(f"오류 발생: {e}")
 
 class Camera(QThread):
     update = pyqtSignal()
@@ -21,7 +52,7 @@ class Camera(QThread):
         
     def run(self):
         count = 0
-        while self.running:
+        while self.running == True:
             self.update.emit()
             time.sleep(0.1)
             
@@ -34,6 +65,13 @@ class WindowClass(QMainWindow, from_class) :
         self.setupUi(self)
         
         self.arduino = serial.Serial('/dev/ttyACM0', 9600)
+        
+        # Camera Update
+        
+        self.camera_thread = Camera(self)
+        self.camera_thread.daemon = True
+        self.camera_thread.update.connect(self.update_camera)
+        self.pixmap = QPixmap()
         
         
         # Dust 그래프 
@@ -129,6 +167,45 @@ class WindowClass(QMainWindow, from_class) :
         self.update_timer.timeout.connect(self.update_data)
         self.update_timer.start(300)
         
+        
+    def update_camera(self):
+        retval, image = self.video.read()
+        if retval:
+            self.image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            
+            h, w, c = self.image.shape
+            qimage = QImage(self.image.data, w, h, w*c, QImage.Format_RGB888)
+            
+            self.pixmap = self.pixmap.fromImage(qimage)
+            self.pixmap = self.pixmap.scaled(self.lbcamera.width(), self.lbcamera.height())
+            
+            self.lbcamera.setPixmap(self.pixmap)
+            
+    def capture_image(self):
+    # 카메라에서 이미지 가져오기
+        ret, frame = self.video.read()
+        if ret:
+            # 이미지를 파일로 저장할 경로 설정
+            image_path = "captured_image.jpg"
+            # 이미지 저장
+            cv2.imwrite(image_path, frame)
+            # 저장된 이미지 경로 출력
+            print("Captured image saved at:", image_path)
+                
+    def clickCamera(self):
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.start_recording)
+        self.timer.start(5000)
+        # self.start_recording()
+            
+    def start_recording(self):
+        # self.camera_thread.stop()
+        # self.camera_thread.running = True
+        self.camera_thread.start()
+        self.video = cv2.VideoCapture(0)
+        
+        QTimer.singleShot(3000, self.capture_image)
+        
     def update_data(self):
         if self.arduino.in_waiting:
             sensor_value = self.arduino.readline().decode().strip()
@@ -183,11 +260,15 @@ class WindowClass(QMainWindow, from_class) :
                     self.lbresistance.setText("Resistance : " + str(resistance_value))
                     self.lbsound.setText("Sound : " + str(sound_value))
                     
-                if sound_value >= 300:
+                if sound_value >= 290:
+                    QTimer.singleShot(5000, self.start_recording)
                     QMessageBox.warning(self, "Sound Warning!", "위험 단계 - 1(Sound)")
+                    
+                    
 
                 if dustdensity >= 300:
                     QMessageBox.warning(self, "Dustdensity Warning!", "위험 단계 - 1(Dustdensity")
+                    
                     
                 if mq7 >= 0.9:
                     QMessageBox.warning(self, "MQ7 Warning!", "위험 단계 - 1(MQ7)")
@@ -269,6 +350,8 @@ class WindowClass(QMainWindow, from_class) :
                     
 
 if __name__ == "__main__":
+    # client = ImageClient()
+    # client.send_image('captured_image.jpg')
     app = QApplication(sys.argv)
     myWindows = WindowClass()
     myWindows.show()
