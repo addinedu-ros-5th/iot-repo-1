@@ -65,17 +65,20 @@
     <property name="geometry">
      <rect>
       <x>530</x>
-      <y>130</y>
+      <y>190</y>
       <width>151</width>
       <height>31</height>
      </rect>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
    </widget>
-   <widget class="QLabel" name="namelabel">
+   <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
       <x>450</x>
-      <y>140</y>
+      <y>190</y>
       <width>67</width>
       <height>17</height>
      </rect>
@@ -84,11 +87,11 @@
      <string>이름 :</string>
     </property>
    </widget>
-   <widget class="QLabel" name="phonelabel">
+   <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
       <x>450</x>
-      <y>200</y>
+      <y>250</y>
       <width>67</width>
       <height>17</height>
      </rect>
@@ -101,17 +104,20 @@
     <property name="geometry">
      <rect>
       <x>530</x>
-      <y>190</y>
+      <y>240</y>
       <width>151</width>
       <height>31</height>
      </rect>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
    </widget>
-   <widget class="QLabel" name="addlabel">
+   <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
       <x>450</x>
-      <y>260</y>
+      <y>310</y>
       <width>67</width>
       <height>17</height>
      </rect>
@@ -124,18 +130,21 @@
     <property name="geometry">
      <rect>
       <x>530</x>
-      <y>250</y>
+      <y>300</y>
       <width>151</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_enter">
     <property name="geometry">
      <rect>
-      <x>450</x>
-      <y>310</y>
-      <width>231</width>
+      <x>440</x>
+      <y>360</y>
+      <width>121</width>
       <height>81</height>
      </rect>
     </property>
@@ -143,7 +152,7 @@
      <string>ENTER</string>
     </property>
    </widget>
-   <widget class="QLabel" name="dangerlabel">
+   <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -154,6 +163,45 @@
     </property>
     <property name="text">
      <string>위험도 레벨</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>450</x>
+      <y>140</y>
+      <width>67</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>UID :</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_clear">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>360</y>
+      <width>121</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>CLEAR</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="text_edit">
+    <property name="geometry">
+     <rect>
+      <x>530</x>
+      <y>110</y>
+      <width>151</width>
+      <height>70</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>
