@@ -4,14 +4,15 @@ from PyQt5.QtGui import *
 from PyQt5 import uic
 from PyQt5.QtCore import *
 import serial
+import time
 import urllib.request
 import pyqtgraph as pg
 import numpy as np
-import time
 import cv2, imutils
 import socket
 import os
 import threading
+import datetime
 
 from_class = uic.loadUiType("one_person.ui")[0]
 
@@ -166,6 +167,7 @@ class WindowClass(QMainWindow, from_class) :
         self.sound_graphWidget.addItem(y500)
         self.sound_graphWidget.addItem(y750)
         
+        self.warning_shown = False
         
         self.update_timer = QTimer(self)  
         self.update_timer.timeout.connect(self.update_data)
@@ -174,55 +176,84 @@ class WindowClass(QMainWindow, from_class) :
 
 
     def update_camera(self):
-        if self.video is not None:
-            retval, image = self.video.read()
-            if retval:
-                self.image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                
-                h, w, c = self.image.shape
-                qimage = QImage(self.image.data, w, h, w*c, QImage.Format_RGB888)
-                
-                self.pixmap = self.pixmap.fromImage(qimage)
-                self.pixmap = self.pixmap.scaled(self.lbcamera.width(), self.lbcamera.height())
-                
-                self.lbcamera.setPixmap(self.pixmap)
+        # if self.video is not None:
+        retval, image = self.video.read()
+        if retval:
+            self.image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            
+            h, w, c = self.image.shape
+            qimage = QImage(self.image.data, w, h, w*c, QImage.Format_RGB888)
+            
+            self.pixmap = self.pixmap.fromImage(qimage)
+            self.pixmap = self.pixmap.scaled(self.lbcamera.width(), self.lbcamera.height())
+            
+            self.lbcamera.setPixmap(self.pixmap)
             
     def capture_image(self):
     # 카메라에서 이미지 가져오기
         ret, frame = self.video.read()
         if ret:
             # 이미지를 파일로 저장할 경로 설정
-            image_path = "/home/hb/Desktop/image/captured_image.jpg"
+            self.now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            
             # 이미지 저장
-            cv2.imwrite(image_path, frame)
+            cv2.imwrite("/home/hb/Desktop/image/" + self.now + '.png', frame)
             # 저장된 이미지 경로 출력
-            print("Captured image saved at:", image_path)
+            print("Save Success")
             
             self.stop_recording()
             self.lbcamera.clear()
                 
-    def clickCamera(self):
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.start_recording)
-        self.timer.start(5000)
-        # self.start_recording()
+    # def clickCamera(self):
+    #     self.timer = QTimer(self)
+    #     self.timer.timeout.connect(self.start_recording)
+    #     self.timer.start(5000)
+    #     # self.start_recording()
         
     def stop_recording(self):
         
+        self.camera_thread.running = False
+        self.count = 0
         self.camera_thread.stop()
-        self.video.release
+        self.video.release()
         #self.lbcamera.clear()
         
     def start_recording(self):
         # self.camera_thread.stop()
-        # self.camera_thread.running = True
+        self.camera_thread.running = True
         self.camera_thread.start()
         self.video = cv2.VideoCapture(0)
         
         QTimer.singleShot(3000, self.capture_image)
         #self.image_client.start()
         
+    def show_warning_message(self):
+        # if not self.warning_shown:
+        self.warning_message_box = QMessageBox(self)
+        self.warning_message_box.setWindowTitle("Warning!")
+        self.warning_message_box.setText("Dangerous Level : 2")
+        self.warning_message_box.setStandardButtons(QMessageBox.Ok)
+        self.warning_message_box.exec_()
+        
+        self.warning_shown = True
+        
+        # Start a timer for 5 seconds
+        self.response_timer = QTimer()
+        self.response_timer.setSingleShot(True)
+        self.response_timer.timeout.connect(self.check_response)
+        self.response_timer.start(5000)
+        
+    def check_response(self):
+        if self.warning_message_box.isVisible():
+            self.start_recording()
+            
+            self.warning_message_box.close()
+        else:
+            print("User responded")
 
+            
+        # else:
+        #     self.start_recording()
     
     def update_data(self):
         if self.arduino.in_waiting:
@@ -236,11 +267,13 @@ class WindowClass(QMainWindow, from_class) :
             mq2 = self.sensor_data[3]
             resistance_value = self.sensor_data[4]
             sound_value = self.sensor_data[5]
-            self.danger_list.append(self.sensor_data[6:])
-            print(self.danger_list)
+            # self.danger_list.append(self.sensor_data[6:])
+            # print(self.danger_list)
+            danger_status = int(self.sensor_data[16])
+            
             
             if sensor_value:
-                if len(self.sensor_data) == 16:
+                if len(self.sensor_data) == 17:
                     self.dust_x_data.append(len(self.dust_x_data))
                     self.dust_y_data.append(float(dustdensity))
                     self.mq7_x_data.append(len(self.mq7_x_data))
@@ -279,37 +312,13 @@ class WindowClass(QMainWindow, from_class) :
                     self.lbmq2.setText('MQ2 : ' + str(mq2))
                     self.lbresistance.setText("Resistance : " + str(resistance_value))
                     self.lbsound.setText("Sound : " + str(sound_value))
+                    self.lbdanger.setText("위험 단계 : " + str(danger_status))
+                    self.lbdanger.setAlignment(Qt.AlignCenter)
+                    self.setStyleSheet("font-size: 20px;")
                     
-                if sound_value >= 300:
-                    
-                    
-                    warning_message = QMessageBox.warning(self, "Sound Warning!", "위험 단계 - 1(Sound)")
-                    
-                    # if warning_message == QMessageBox.Ok:
-                    #     pass
-                    
-                    # else:
-                    #     QTimer.singleShot(5000, self.start_recording)
-
-                    
-                    
-                    
-
-                if dustdensity >= 300:
-                    QMessageBox.warning(self, "Dustdensity Warning!", "위험 단계 - 1(Dustdensity")
-                    
-                    
-                if mq7 >= 0.9:
-                    QMessageBox.warning(self, "MQ7 Warning!", "위험 단계 - 1(MQ7)")
-                    
-                if mq135 >= 0.6:
-                    QMessageBox.warning(self, "MQ135 Warning!", "위험 단계 - 1(MQ135)")
-                    
-                if mq2 >= 6:
-                    QMessageBox.warning(self, "MQ2 Warning!", "위험 단계 - 1(MQ2)")
-                    
-                if resistance_value >= 60:
-                    QMessageBox.warning(self, "Resistance Warning!", "위험 단계 - 1(Resistance)")
+                if danger_status == 2:
+                    #self.danger = QMessageBox.warning(self, "Warning!", "Dangerous Level : 2!", QMessageBox.Ok)
+                    self.show_warning_message()
                     
                 
                 # Gragh Reset
