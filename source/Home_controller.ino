@@ -43,8 +43,8 @@ const int BUZZER_PIN = 10 ;
 const int SERVO_PIN = 11 ;
 
 /* Constants */
-unsigned long lastUpdateTime = 0; // Variable to store the last update time
-unsigned long samplingInterval = 1000;
+unsigned long lastUpdateTime = 0; 
+unsigned long samplingInterval = 100;
 unsigned long lastDebounceTimeBath = 0;  
 unsigned long lastDebounceTimeRoom = 0;  
 unsigned long debounceDelay_BTN = 200;  
@@ -79,6 +79,7 @@ int lastPirState2 = LOW;
 /* Danger Thresholds*/
 int vresistorThreshold = 10;
 int micThreshold = 100;
+int THRESHOLD = 500;
 
 /* Datasets to go to DB */
 /* analog data*/
@@ -88,7 +89,6 @@ float MQ135_PPM = 0;
 float MQ2_PPM = 0;
 int resistanceValue = 0;
 int micValue =0;
-
 /* digital data*/
 bool buttonStateBath = LOW;
 bool buttonStateRoom = LOW;
@@ -101,6 +101,7 @@ int micDanger_status=0;
 int motion1 = 0;
 int motion2 = 0;
 
+
 /* Function Declaration  */
 void dustsensor();
 MQUnifiedsensor MQ7 (board, Voltage_Resolution, ADC_Bit_Resolution, MQ7_PIN, MQ7_type);
@@ -108,10 +109,10 @@ MQUnifiedsensor MQ135(board, Voltage_Resolution, ADC_Bit_Resolution, MQ135_PIN, 
 MQUnifiedsensor MQ2(board, Voltage_Resolution, ADC_Bit_Resolution, MQ2_PIN, MQ2_type);
 int readVariableResistance();
 int readMicValue();
-void updateStatus(int resistance);
-void updateDangerStatus(int micValue);
-void processBathButton();
-void processRoomButton();
+void heaterDangerStatus(int resistance);
+void soundDangerStatus(int micValue);
+void ledBathButton();
+void ledRoomButton();
 void checkBellButton();
 void ringBuzzer();
 void checkButton();
@@ -122,21 +123,21 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
 
-  MQ7.setRegressionMethod(1); // _PPM =  a*ratio^b
+  MQ7.setRegressionMethod(1);
   MQ7.setA(99.042); MQ7.setB(-1.518); // Configure the equation values to get CO concentration
-  MQ135.setRegressionMethod(1); //_PPM =  a*ratio^b
-  MQ135.setA(102.2); MQ135.setB(-2.473); // Configure the equation to to calculate NH4 concentration
-  MQ2.setRegressionMethod(1); //_PPM =  a*ratio^b
-  MQ2.setA(574.25); MQ2.setB(-2.222); // Configure the equation to to calculate LPG concentration
+  MQ135.setRegressionMethod(1); 
+  MQ135.setA(102.2); MQ135.setB(-2.473); // Configure the equation to to calculate NH3, SO2 etc. concentration
+  MQ2.setRegressionMethod(1); 
+  MQ2.setA(574.25); MQ2.setB(-2.222); // Configure the equation to to calculate LNG, LPG etc. concentration
 
   MQ7.init();
   MQ135.init();
   MQ2.init(); 
 
-  // Serial.println("Calibrating please wait.");
+
   for(int i = 1; i <= 10; i++) {
-    MQ7.update(); // Update data, the Arduino will read the voltage on the analog pin
-    MQ135.update(); // Update data, the arduino will read the voltage from the analog pin
+    MQ7.update(); 
+    MQ135.update(); 
     MQ2.update();
     
     calcR0 += MQ7.calibrate(RatioMQ7CleanAir);
@@ -167,19 +168,18 @@ void setup() {
 void loop() {
   unsigned long currentTime = millis();
 
-  processBathButton();
-  processRoomButton();
 
+  ledBathButton();
+  ledRoomButton();
   checkBellButton();
-  
   checkButton();
   
   
   motion1 = readPIR(PIR_BATH_PIN, lastDetectionTime1, pirState1, lastPirState1);
   motion2 = readPIR(PIR_PIN, lastDetectionTime2, pirState2, lastPirState2);
-
+  
   if (currentTime - lastUpdateTime >= samplingInterval) {
-    lastUpdateTime = currentTime; // Update the last update time
+    lastUpdateTime = currentTime;
     
     // Update MQ sensor data
     MQ7.update();
@@ -193,7 +193,8 @@ void loop() {
     MQ2_PPM = MQ2.readSensor();
     resistanceValue = readVariableResistance();
     micValue = analogRead(MIC_PIN);
-
+    heaterDangerStatus(resistanceValue);
+    soundDangerStatus(micValue);
     
     // Print sensor data if needed
     // Serial.print("Dust density (mg/m^3) : ");
@@ -228,10 +229,14 @@ void loop() {
     Serial.print(",");
     Serial.print(buttonState);
     Serial.print(",");
+    Serial.print(vresistorDanger_status);
+    Serial.print(",");
+    Serial.print(micDanger_status);
+    Serial.print(",");
     Serial.print(motion1);
     Serial.print(",");
     Serial.println(motion2);
-
+    
   }
 }
 
@@ -254,39 +259,37 @@ void dustsensor(){
 
 // Function to read the variable resistance value
 int readVariableResistance() {
-  // Read the analog input
   int sensorValue = analogRead(VRESISOTR_PIN);
 
-  // Map the sensor value (0-1023) to the desired range (0-100)
+  // Map the sensor value (0-1023) to the desired range (0-100) for heating temperature
   int resistanceValue = map(sensorValue, 0, 1023, 0, 100);
 
   return resistanceValue;
 }
 // Function to update status based on the change in resistance
-void updateStatus(int resistance) {
-  // Calculate the change in resistance value
+void heaterDangerStatus(int resistance) {
   int resistanceChange = abs(resistance - previousReading);
 
   if (resistanceChange > vresistorThreshold) {
-    vresistorDanger_status = 0; // Change detected
+    vresistorDanger_status = 0; 
   } else {
-    vresistorDanger_status = 1; // No change
+    vresistorDanger_status = 1; 
   }
 }
 
 
 // Function to check the danger of loud noise
-void updateDangerStatus(int micValue) {
-  if (micValue - previousMicValue > micThreshold) {
+void soundDangerStatus(int micValue) {
+  micValue = analogRead(MIC_PIN);
+
+  if (micValue > micThreshold) {
     micDanger_status = 1;
   } else {
     micDanger_status = 0;
   }
-  
-  previousMicValue = micValue;
 }
 
-void processBathButton() {
+void ledBathButton() {
   int readingBath = digitalRead(BTN_LED_BATH_PIN);
   
   if (readingBath != lastButtonStateBath) {
@@ -307,7 +310,7 @@ void processBathButton() {
   lastButtonStateBath = readingBath;
 }
 
-void processRoomButton() {
+void ledRoomButton() {
   int readingRoom = digitalRead(BTN_LED_PIN);
   
   if (readingRoom != lastButtonStateRoom) {
@@ -345,7 +348,6 @@ void checkBellButton() {
 
 
 void ringBuzzer() {
-  // 부저 울리기 함수
   unsigned long lastToneTime = 0; 
   unsigned long toneInterval = 100; 
   unsigned long currentTime = millis();
@@ -369,7 +371,6 @@ void ringBuzzer() {
     tone(BUZZER_PIN, 523, 500);
   }
 }
-
 // Function to check the button status and control the servo motor
 void checkButton() {
 
