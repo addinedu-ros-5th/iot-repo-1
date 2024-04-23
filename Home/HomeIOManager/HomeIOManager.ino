@@ -59,9 +59,10 @@ float calcR0 = 0;
 float calcR1 = 0;
 float calcR2 = 0;
 
+int vresistorDanger_status = 0;
 int previousReading = 0;
 int previousMicValue = 0;
-int danger_status = 0;
+
 
 bool lastButtonStateBath = LOW;
 bool lastButtonStateRoom = LOW;
@@ -70,7 +71,7 @@ bool lastBellState = LOW;
 
 Servo servoMotor;
 bool lastMotorButtonState = LOW;
-bool servoTurned = false;
+
 
 int pirState1 = LOW;
 int pirState2 = LOW;
@@ -97,11 +98,14 @@ bool buttonStateRoom = LOW;
 bool LED_BATH_STATUS = LOW;
 bool LED_ROOM_STATUS = LOW;
 bool bellState = LOW;
+
 bool buttonState = LOW;
-int vresistorDanger_status = 1;
-int micDanger_status = 0;
+bool servoTurned = false;
+
 int motion1 = 0;
 int motion2 = 0;
+int micDanger_status = 0;
+int danger_status = 0;
 
 /* Function Declaration  */
 void dustsensor();
@@ -220,62 +224,63 @@ void loop() {
     updateDangerStatus(micValue, motion1, motion2);
     // Print sensor data if needed
     // Serial.print("Dust density (mg/m^3) : ");
-    Serial.print("dust : ");
     Serial.print(dustDensity);
     Serial.print(", ");
     // MQ7.serialDebug();
-    Serial.print("MQ-7 : ");
+    //Serial.print("MQ-7 : ");
     Serial.print(MQ7_PPM);
     Serial.print(", ");
     // MQ135.serialDebug();
-    Serial.print("MQ-135 : ");
+    //Serial.print("MQ-135 : ");
     Serial.print(MQ135_PPM);
     Serial.print(", ");
     // MQ2.serialDebug();
-    Serial.print("MQ-2 : ");
+    //Serial.print("MQ-2 : ");
     Serial.print(MQ2_PPM);
     Serial.print(", ");
     // Serial.print("VResistor : ");
-    Serial.print("GAS : ");
+    // Serial.print("GAS : ");
     Serial.print(resistanceValue);
     Serial.print(", ");
-    // Serial.print("Sound : ");
-    Serial.print("mic : ");
+    // Serial.print("Sound : ")
     Serial.print(micValue);
-    Serial.print("   |  ");
-
-    Serial.print("btnBath : ");
+    Serial.print("|");
+    
+    //Serial.print("btnBath : ");
     Serial.print(buttonStateBath);
     Serial.print(", ");
-    Serial.print("btnRoom : ");
+    //Serial.print("btnRoom : ");
     Serial.print(buttonStateRoom);
     Serial.print(", ");
-    Serial.print("LEDBath : ");
+    //Serial.print("LEDBath : ");
     Serial.print(LED_BATH_STATUS);
     Serial.print(", ");
-    Serial.print("LEDRoom : ");
+    //Serial.print("LEDRoom : ");
     Serial.print(LED_ROOM_STATUS);
     Serial.print(", ");
-    Serial.print("bell : ");
+    //Serial.print("bell : ");
     Serial.print(bellState);
-    Serial.print(", ");
-    Serial.print("servo : ");
+    Serial.print("|");
+
+    //Serial.print("servo : ");
     Serial.print(buttonState);
     Serial.print(", ");
-    Serial.print("PIR1 : ");
+    // Serial.print("servostate : ");
+    Serial.print(servoTurned);
+    Serial.print("|");
+
+    //Serial.print("PIR1 : ");
     Serial.print(motion1);
     Serial.print(", ");
-    Serial.print("PIR2 : ");
+    //Serial.print("PIR2 : ");
     Serial.print(motion2);
     Serial.print(", ");
-    Serial.print("micstate : ");
+    //Serial.print("micstate : ");
     Serial.print(micDanger_status);
     Serial.print(", ");
-    Serial.print("위험단계 : ");
+    //Serial.print("위험단계 : ");
     Serial.print(danger_status);
-    Serial.print(", ");
-    Serial.print("servostate : ");
-    Serial.print(servoTurned);
+    
   }
   Serial.println();
 }
@@ -386,8 +391,6 @@ void checkBellButton() {
       ringBuzzer();
     }
   }
-
-
   lastBellState = bellState;
 }
 
@@ -418,29 +421,6 @@ void ringBuzzer() {
   }
 }
 
-// Function to check the button status and control the servo motor
-// void checkButton() {
-//   buttonState = digitalRead(BTN_GAS_VALVE_PIN);
-
-//   if (buttonState != lastMotorButtonState) {
-//     if (buttonState == HIGH) {
-//       if (!servoTurned) {
-//         servoMotor.write(90);  // 서보모터를 90도 회전
-//         servoTurned = true;
-//         servoStartTime = millis();  // 서보모터가 시작된 시간 기록
-//       }
-//     } else {  // 버튼이 눌리지 않은 경우
-//       // 서보모터가 켜진 상태이고, 현재 시간이 시작 시간으로부터 10초가 지났을 때
-//       if (servoTurned && (millis() - servoStartTime >= servoDuration)) {
-//         servoMotor.write(0);  // 서보모터를 0도로 회전
-//         servoTurned = false;
-//       }
-//     }
-//   }
-
-//   lastMotorButtonState = buttonState;
-// }
-
 int buttonPress() {
   int press;
   int buttonState;
@@ -452,22 +432,3 @@ int buttonPress() {
 }
 
 
-
-// // Function to check and return the movement of the pir sensor
-// int readPIR(int pirPin, unsigned long &lastDetectionTime, int &pirState, int &lastPirState) {
-//   int reading = digitalRead(pirPin);
-
-//   if (reading != lastPirState) {
-//     lastDetectionTime = millis();
-//   }
-
-//   if ((millis() - lastDetectionTime) > debounceDelay_PIR) {
-//     if (reading != pirState) {
-//       pirState = reading;
-//     }
-//   }
-
-//   lastPirState = reading;
-
-//   return pirState == HIGH ? 1 : 0;
-// }
