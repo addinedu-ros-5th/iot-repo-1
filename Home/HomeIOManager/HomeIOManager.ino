@@ -41,6 +41,8 @@ const int LED_BATH_PIN = 8;
 const int LED_PIN = 9;
 const int BUZZER_PIN = 10;
 const int SERVO_PIN = 11;
+const int GAS_BUZZER = 12;
+const int DUST_FAN = 13;
 
 /* Constants */
 unsigned long lastUpdateTime = 0;  // Variable to store the last update time
@@ -171,6 +173,8 @@ void setup() {
 
   pinMode(PIR_BATH_PIN, INPUT);
   pinMode(PIR_PIN, INPUT);
+  pinMode(DUST_FAN, OUTPUT);
+  pinMode(GAS_BUZZER, OUTPUT);
 }
 
 void loop() {
@@ -180,8 +184,7 @@ void loop() {
       servoMotor.write(90);  // 서보모터를 90도 회전
       servoTurned = true;
       servoStartTime = millis();  // 서보모터가 시작된 시간 기록
-    }
-    else{
+    } else {
       servoMotor.write(0);
       servoTurned = false;
     }
@@ -245,7 +248,7 @@ void loop() {
     // Serial.print("Sound : ")
     Serial.print(micValue);
     Serial.print("|");
-    
+
     //Serial.print("btnBath : ");
     Serial.print(buttonStateBath);
     Serial.print(", ");
@@ -280,9 +283,14 @@ void loop() {
     Serial.print(", ");
     //Serial.print("위험단계 : ");
     Serial.print(danger_status);
-    
   }
   Serial.println();
+  if (MQ2_PPM > 2.9) {
+    digitalWrite(GAS_BUZZER, HIGH);
+
+  } else {
+    digitalWrite(GAS_BUZZER, LOW);
+  }
 }
 
 
@@ -293,6 +301,13 @@ void dustsensor() {
   float calcVoltage = dustMeasured * (5.0 / 1024.0);
   // Calculate dust density
   dustDensity = 170 * calcVoltage - 0.1;
+  if (dustDensity > 210) {
+    digitalWrite(DUST_FAN, HIGH);
+
+  } else {
+    digitalWrite(DUST_FAN, LOW);
+  }
+
   return dustDensity;
 }
 // 3000 +     = VERY POOR
@@ -430,5 +445,3 @@ int buttonPress() {
   prevButtonState = buttonState;
   return press;
 }
-
-
