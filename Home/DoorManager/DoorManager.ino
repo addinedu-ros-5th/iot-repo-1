@@ -20,7 +20,6 @@ bool cardPresent = false;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(BUTTON_PIN, INPUT);
   SPI.begin();
   rc522.PCD_Init();
   rfid_status = REGISTRATION;
