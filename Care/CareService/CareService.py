@@ -1,646 +1,181 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>741</width>
-    <height>613</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>Dialog</string>
-  </property>
-  <widget class="QGroupBox" name="groupBox">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>20</y>
-     <width>711</width>
-     <height>571</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Care Service GUI</string>
-   </property>
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>30</y>
-      <width>401</width>
-      <height>381</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_call">
-    <property name="geometry">
-     <rect>
-      <x>440</x>
-      <y>30</y>
-      <width>251</width>
-      <height>71</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>신고</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="dangerLevel">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>490</y>
-      <width>691</width>
-      <height>71</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="nameEdit">
-    <property name="geometry">
-     <rect>
-      <x>530</x>
-      <y>190</y>
-      <width>151</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_7">
-    <property name="geometry">
-     <rect>
-      <x>450</x>
-      <y>190</y>
-      <width>67</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>이름 :</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>450</x>
-      <y>250</y>
-      <width>67</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>전화번호 :</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="phoneEdit">
-    <property name="geometry">
-     <rect>
-      <x>530</x>
-      <y>240</y>
-      <width>151</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_3">
-    <property name="geometry">
-     <rect>
-      <x>450</x>
-      <y>310</y>
-      <width>67</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>주소 :</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="addEdit">
-    <property name="geometry">
-     <rect>
-      <x>530</x>
-      <y>300</y>
-      <width>151</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_enter">
-    <property name="geometry">
-     <rect>
-      <x>440</x>
-      <y>360</y>
-      <width>121</width>
-      <height>81</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>ENTER</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_4">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>460</y>
-      <width>81</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>위험도 레벨</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_clear">
-    <property name="geometry">
-     <rect>
-      <x>570</x>
-      <y>360</y>
-      <width>121</width>
-      <height>81</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>CLEAR</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btnupdate">
-    <property name="geometry">
-     <rect>
-      <x>680</x>
-      <y>490</y>
-      <width>20</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="palette">
-     <palette>
-      <active>
-       <colorrole role="WindowText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Button">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>246</red>
-          <green>245</green>
-          <blue>244</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Light">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Midlight">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>250</red>
-          <green>250</green>
-          <blue>249</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Dark">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>123</red>
-          <green>122</green>
-          <blue>122</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Mid">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>164</red>
-          <green>163</green>
-          <blue>163</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Text">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="BrightText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="ButtonText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Base">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Window">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>246</red>
-          <green>245</green>
-          <blue>244</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Shadow">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="AlternateBase">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>250</red>
-          <green>250</green>
-          <blue>249</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="ToolTipBase">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>220</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="ToolTipText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="PlaceholderText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="128">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-      </active>
-      <inactive>
-       <colorrole role="WindowText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Button">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>246</red>
-          <green>245</green>
-          <blue>244</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Light">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Midlight">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>250</red>
-          <green>250</green>
-          <blue>249</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Dark">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>123</red>
-          <green>122</green>
-          <blue>122</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Mid">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>164</red>
-          <green>163</green>
-          <blue>163</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Text">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="BrightText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="ButtonText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Base">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Window">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>246</red>
-          <green>245</green>
-          <blue>244</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Shadow">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="AlternateBase">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>250</red>
-          <green>250</green>
-          <blue>249</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="ToolTipBase">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>220</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="ToolTipText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="PlaceholderText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="128">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-      </inactive>
-      <disabled>
-       <colorrole role="WindowText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>123</red>
-          <green>122</green>
-          <blue>122</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Button">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>246</red>
-          <green>245</green>
-          <blue>244</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Light">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Midlight">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>250</red>
-          <green>250</green>
-          <blue>249</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Dark">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>123</red>
-          <green>122</green>
-          <blue>122</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Mid">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>164</red>
-          <green>163</green>
-          <blue>163</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Text">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>123</red>
-          <green>122</green>
-          <blue>122</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="BrightText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="ButtonText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>123</red>
-          <green>122</green>
-          <blue>122</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Base">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>246</red>
-          <green>245</green>
-          <blue>244</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Window">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>246</red>
-          <green>245</green>
-          <blue>244</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="Shadow">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="AlternateBase">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>246</red>
-          <green>245</green>
-          <blue>244</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="ToolTipBase">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>255</red>
-          <green>255</green>
-          <blue>220</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="ToolTipText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="255">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-       <colorrole role="PlaceholderText">
-        <brush brushstyle="SolidPattern">
-         <color alpha="128">
-          <red>0</red>
-          <green>0</green>
-          <blue>0</blue>
-         </color>
-        </brush>
-       </colorrole>
-      </disabled>
-     </palette>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="iconSize">
-     <size>
-      <width>1</width>
-      <height>1</height>
-     </size>
-    </property>
-   </widget>
-  </widget>
- </widget>
- <resources/>
- <connections/>
-</ui>
+import sys
+import socket
+import json
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+import mysql.connector
+import serial
+import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import threading
+from PyQt5 import uic
+import os
+
+from_class = uic.loadUiType("CareService.ui")[0]
+class WindowClass(QMainWindow, from_class):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.setWindowTitle("CareService")
+
+        self.pic = QLabel(self)
+        self.start_image_server()
+        self.btnupdate.clicked.connect(self.update)
+        self.btn_enter.clicked.connect(self.save)
+        self.btn_clear.clicked.connect(self.clearFields)
+        self.btn_call.clicked.connect(self.callEmergency)
+        self.timer = QTimer(self)
+
+        self.timer.timeout.connect(self.update)  # QTimer timeout 이벤트를 update 함수와 연결
+        self.timer.start(1000)  # 1초마다 update 함수 호출
+
+        self.db_connection = mysql.connector.connect(
+            host="iot.cf64s86023q3.ap-northeast-2.rds.amazonaws.com",
+            user="iot",
+            password="1234",
+            database="iot"
+        )
+        self.cursor = self.db_connection.cursor(buffered = True)
+
+        if self.db_connection.is_connected():
+            print("MySQL connected successfully!")
+        else:
+            print("MySQL connection failed.")
+
+
+    def start_image_server(self):
+        self.image_server = ImageServer()
+        self.image_thread = threading.Thread(target=self.image_server.receive_image, args=(self.label,))
+        self.image_thread.start()
+
+    def update(self):
+        query = "SELECT * FROM danger_data order by sensing_time desc"
+        self.cursor.execute(query)
+        self.db_connection.commit()  # 커밋 후 커서 리셋
+        data = self.cursor.fetchone()  # Fetch the last row
+            
+        # Populate dangerLevel line edit with fetched data
+        if data:
+            sensing_time, danger_status = data
+            self.dangerLevel.setText(f"시간 : {sensing_time}, 위험 단계: {danger_status}")
+        else:
+            self.dangerLevel.setText("No data available")
+
+    def populate_danger_level(self):
+        # Fetch last row from MySQL table
+        query = "SELECT * FROM danger_data order by sensing_time desc"
+        self.cursor.execute(query)
+        data = self.cursor.fetchone()  # Fetch the last row
+            
+        # Populate dangerLevel line edit with fetched data
+        if data:
+            sensing_time, danger_status = data
+            self.dangerLevel.setText(f"시간 : {sensing_time}, 위험 단계: {danger_status}")
+        else:
+            self.dangerLevel.setText("No data available")
+
+    def save(self):
+        name = self.nameEdit.text()
+        phone = self.phoneEdit.text()
+        address = self.addEdit.text()
+        query = "INSERT INTO example VALUES (%s, %s, %s)"
+        values = (name, phone, address)
+        self.cursor.execute(query, values)
+        self.db_connection.commit()
+
+        self.nameEdit.setReadOnly(True)
+        self.phoneEdit.setReadOnly(True)
+        self.addEdit.setReadOnly(True)
+
+    def clearFields(self):
+        # 입력 필드 초기화 및 수정 가능하도록 변경
+        self.nameEdit.clear()
+        self.nameEdit.setReadOnly(False)
+        self.phoneEdit.clear()
+        self.phoneEdit.setReadOnly(False)
+        self.addEdit.clear()
+        self.addEdit.setReadOnly(False)
+
+    def callEmergency(self):
+        # 셀레니움을 사용하여 웹 브라우저를 열고 작업 수행
+        driver = webdriver.Chrome()  # Chrome 드라이버 사용
+        driver.get("https://www.119.go.kr/Center119/regist.do#")
+        # 이름 입력
+        name = self.nameEdit.text()
+        name_field = driver.find_element(By.XPATH, '//*[@id="dsr_name"]')
+        name_field.send_keys(name)
+        time.sleep(1)
+        # 전화번호 입력
+        phone = self.phoneEdit.text()
+        phone1_field = driver.find_element(By.XPATH, '//*[@id="call_tel1"]')
+        phone1_field.send_keys(phone[:3])
+        phone2_field = driver.find_element(By.XPATH, '//*[@id="call_tel2"]')
+        phone2_field.send_keys(phone[3:7])
+        phone3_field = driver.find_element(By.XPATH, '//*[@id="call_tel3"]')
+        phone3_field.send_keys(phone[7:])
+        time.sleep(1)
+        # 체크박스 체크
+        check = driver.find_element(By.XPATH, '//*[@id="agree01"]')
+        check.click()
+        time.sleep(1)
+        # 주소 입력
+        address = self.addEdit.text()
+        address_field = driver.find_element(By.XPATH, '//*[@id="juso2"]')
+        address_field.send_keys(address)
+        time.sleep(1)
+        # 버튼 클릭
+        save_btn = driver.find_element(By.XPATH, '//*[@id="save_btn"]')
+        save_btn.click()
+        time.sleep(1)
+        # 작업이 완료되면 웹 브라우저를 닫습니다.
+        QTimer.singleShot(3000,  driver.quit)  # 3초 대기 후 브라우저 종료
+
+
+
+    def timerEvent(self, event):
+        self.populate_danger_level()
+
+class ImageServer:
+    def __init__(self):
+        self.host = '192.168.0.198'
+        self.port = 9001
+        self.image_folder = '/home/john/Desktop/image/'
+    def receive_image(self, label):
+        try:
+            server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server_socket.bind((self.host, self.port))
+            server_socket.listen(1)
+            print(f"서버가 {self.host}:{self.port}에서 실행 중입니다.")
+            client_socket, client_address = server_socket.accept()
+            print(f"{client_address}에서 연결됨")
+            size_data = client_socket.recv(4)
+            image_size = int.from_bytes(size_data, byteorder='big', signed=False)
+            image_data = bytearray()
+            while len(image_data) < image_size:
+                chunk = client_socket.recv(image_size - len(image_data))
+                if not chunk:
+                    raise RuntimeError("소켓 연결이 끊겼습니다.")
+                image_data.extend(chunk)
+            image_path = os.path.join(self.image_folder, 'received_image.jpg')
+            with open(image_path, 'wb') as f:
+                f.write(image_data)
+            print('이미지를 저장했습니다', image_path)
+            pixmap = QPixmap()
+            pixmap.loadFromData(bytes(image_data))
+            pixmap = pixmap.scaled(label.width(), label.height())
+            label.setPixmap(pixmap)
+            if not pixmap.isNull():
+                pixmap = pixmap.scaled(label.width(), label.height())
+                label.setPixmap(pixmap)
+            client_socket.close()
+            server_socket.close()
+        except Exception as e:
+            print(f"오류 발생: {e}")
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    myWindows = WindowClass()
+    myWindows.show()
+    sys.exit(app.exec_())
