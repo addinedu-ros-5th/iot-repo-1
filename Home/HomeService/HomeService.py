@@ -14,7 +14,7 @@ import os
 import threading
 import datetime
 
-from_class = uic.loadUiType("one_person.ui")[0]
+from_class = uic.loadUiType("HomeService.ui")[0]
 
 class ImageClient:
     def __init__(self):
@@ -68,18 +68,18 @@ class WindowClass(QMainWindow, from_class) :
         super().__init__()
         self.setupUi(self)
         
-        self.arduino = serial.Serial('/dev/ttyACM0', 9600)
+        self.arduino = serial.Serial('/dev/ttyACM1', 9600)
         self.danger_list = []
         # Camera Update
-        
+        self.serial_port = serial.Serial("/dev/ttyACM0", 9600, timeout=1)
         self.camera_thread = Camera(self)
         self.camera_thread.daemon = True
         self.camera_thread.update.connect(self.update_camera)
         self.pixmap = QPixmap()
         
-        
-        self.image = ImageClient()
-        self.image.send_image_thread('/home/hb/Desktop/image/captured_image.jpg')
+        self.btncard.clicked.connect(self.toggleMode)
+        # self.image = ImageClient()
+        # self.image.send_image_thread('/home/hb/Desktop/image/captured_image.jpg')
         
         # Dust 그래프 
         self.dust_x_data = []
@@ -173,7 +173,28 @@ class WindowClass(QMainWindow, from_class) :
         self.update_timer.timeout.connect(self.update_data)
         self.update_timer.start(100)
         
+    def toggleMode(self):
+        # 현재 버튼의 텍스트 가져오기
+        current_text = self.btncard.text()
 
+        # 버튼의 텍스트에 따라 모드 변경
+        if current_text == "Registration":
+            new_text = "Verification"
+            mode = 'v'
+        else:
+            new_text = "Registration"
+            mode = 'r'
+
+        # 버튼의 텍스트 변경
+        self.btncard.setText(new_text)
+
+        # 모드에 따라 시리얼 통신
+        self.sendSerial(mode)
+
+    def sendSerial(self, mode):
+        # 시리얼 통신으로 모드 전송
+        self.serial_port.write(mode.encode())
+        print(f"Sent mode: {mode}")
 
     def update_camera(self):
         # if self.video is not None:
@@ -197,7 +218,7 @@ class WindowClass(QMainWindow, from_class) :
             self.now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             
             # 이미지 저장
-            cv2.imwrite("/home/hb/Desktop/image/" + self.now + '.png', frame)
+            cv2.imwrite("/home/john/Desktop/image/" + self.now + '.png', frame)
             # 저장된 이미지 경로 출력
             print("Save Success")
             
