@@ -13,13 +13,19 @@ import socket
 import os
 import threading
 import datetime
+import mysql.connector
+import pandas as pd
 
-from_class = uic.loadUiType("HomeService.ui")[0]
+from_class = uic.loadUiType("one_person.ui")[0]
+
 
 class ImageClient:
     def __init__(self):
-        self.host = '192.168.0.163'
-        self.port = 9009
+        self.host = '192.168.0.198'
+        self.port = 9001
+        
+
+        
     def send_image_thread(self, image_path):
         self.thread = threading.Thread(target=self.send_image, args=(image_path,))
         self.thread.start()
@@ -68,18 +74,17 @@ class WindowClass(QMainWindow, from_class) :
         super().__init__()
         self.setupUi(self)
         
-        self.arduino = serial.Serial('/dev/ttyACM1', 9600)
+        
+        
+        
+        self.arduino = serial.Serial('/dev/ttyACM0', 9600)
         self.danger_list = []
         # Camera Update
-        self.serial_port = serial.Serial("/dev/ttyACM0", 9600, timeout=1)
+        self.now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.camera_thread = Camera(self)
         self.camera_thread.daemon = True
         self.camera_thread.update.connect(self.update_camera)
         self.pixmap = QPixmap()
-        
-        self.btncard.clicked.connect(self.toggleMode)
-        # self.image = ImageClient()
-        # self.image.send_image_thread('/home/hb/Desktop/image/captured_image.jpg')
         
         # Dust 그래프 
         self.dust_x_data = []
@@ -173,28 +178,19 @@ class WindowClass(QMainWindow, from_class) :
         self.update_timer.timeout.connect(self.update_data)
         self.update_timer.start(100)
         
-    def toggleMode(self):
-        # 현재 버튼의 텍스트 가져오기
-        current_text = self.btncard.text()
-
-        # 버튼의 텍스트에 따라 모드 변경
-        if current_text == "Registration":
-            new_text = "Verification"
-            mode = 'v'
+        self.db_connection = mysql.connector.connect(
+            host="iot.cf64s86023q3.ap-northeast-2.rds.amazonaws.com",
+            user="iot",
+            password="1234",
+            database="iot"
+        )
+        self.cursor = self.db_connection.cursor()
+        if self.db_connection.is_connected():
+            print("MySQL connected successfully!")
         else:
-            new_text = "Registration"
-            mode = 'r'
+            print("MySQL connection failed.")
 
-        # 버튼의 텍스트 변경
-        self.btncard.setText(new_text)
 
-        # 모드에 따라 시리얼 통신
-        self.sendSerial(mode)
-
-    def sendSerial(self, mode):
-        # 시리얼 통신으로 모드 전송
-        self.serial_port.write(mode.encode())
-        print(f"Sent mode: {mode}")
 
     def update_camera(self):
         # if self.video is not None:
@@ -215,15 +211,23 @@ class WindowClass(QMainWindow, from_class) :
         ret, frame = self.video.read()
         if ret:
             # 이미지를 파일로 저장할 경로 설정
-            self.now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            self.now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
             # 이미지 저장
-            cv2.imwrite("/home/john/Desktop/image/" + self.now + '.png', frame)
+            cv2.imwrite("/home/hb/Desktop/image/" + self.now + '.jpg', frame)
             # 저장된 이미지 경로 출력
             print("Save Success")
             
             self.stop_recording()
             self.lbcamera.clear()
+            self.image = ImageClient()
+            self.image.send_image_thread('/home/hb/Desktop/image/' + self.now + '.jpg')
+            
+            query = "INSERT INTO danger_data VALUES (%s, %s)"
+            value = (self.now, 3)
+            self.cursor.execute(query, value)
+            self.db_connection.commit()
+            
                 
     # def clickCamera(self):
     #     self.timer = QTimer(self)
@@ -246,6 +250,7 @@ class WindowClass(QMainWindow, from_class) :
         self.video = cv2.VideoCapture(0)
         
         QTimer.singleShot(3000, self.capture_image)
+        self.danger_list.append(3)
         #self.image_client.start()
         
     def show_warning_message(self):
@@ -264,6 +269,7 @@ class WindowClass(QMainWindow, from_class) :
         self.response_timer.timeout.connect(self.check_response)
         self.response_timer.start(5000)
         
+        
     def check_response(self):
         if self.warning_message_box.isVisible():
             self.start_recording()
@@ -272,9 +278,7 @@ class WindowClass(QMainWindow, from_class) :
         else:
             print("User responded")
 
-            
-        # else:
-        #     self.start_recording()
+
     
     def update_data(self):
         if self.arduino.in_waiting:
@@ -291,7 +295,7 @@ class WindowClass(QMainWindow, from_class) :
             # self.danger_list.append(self.sensor_data[6:])
             # print(self.danger_list)
             danger_status = int(self.sensor_data[16])
-            
+        
             
             if sensor_value:
                 if len(self.sensor_data) == 17:
@@ -336,9 +340,15 @@ class WindowClass(QMainWindow, from_class) :
                     self.lbdanger.setText("위험 단계 : " + str(danger_status))
                     self.lbdanger.setAlignment(Qt.AlignCenter)
                     self.setStyleSheet("font-size: 20px;")
-                    
-                if danger_status == 2:
-                    #self.danger = QMessageBox.warning(self, "Warning!", "Dangerous Level : 2!", QMessageBox.Ok)
+
+
+
+                if danger_status == 0:
+                    query = "INSERT INTO danger_data VALUES (%s, %s)"
+                    value = (self.now, danger_status)
+                    self.cursor.execute(query, value)
+                    self.db_connection.commit()
+                    # self.danger_list.append(danger_status)
                     self.show_warning_message()
                     
                 
@@ -412,7 +422,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     myWindows = WindowClass()
     myWindows.show()
-    # client = ImageClient()
-    # client.send_image_thread('captured_image.jpg')
-    # app = QApplication(sys.argv)
     sys.exit(app.exec_())
+    # client = ImageClient()
+    # client.send_image_thread('captured_image.jpg')100

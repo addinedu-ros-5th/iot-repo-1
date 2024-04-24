@@ -117,19 +117,6 @@
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="btncard">
-   <property name="geometry">
-    <rect>
-     <x>690</x>
-     <y>530</y>
-     <width>111</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Registration</string>
-   </property>
-  </widget>
  </widget>
  <resources/>
  <connections/>
