@@ -1,60 +1,99 @@
 #include <SPI.h>
 #include <MFRC522.h>
+#include <List.hpp>
 #include <Servo.h>
 
-#define SS_PIN 10
-#define RST_PIN 9
-#define SERVO_PIN 8
-typedef enum {
-  REGISTRATION = 0,
-  IDLE
-} RFID_STATUS;
-MFRC522 rfid(SS_PIN, RST_PIN);  // MFRC522 instance 생성
-RFID_STATUS rfid_status;
-Servo servo;                    // Servo instance 생성
+const int RST_PIN = 9;
+const int SS_PIN = 10;
 
+Servo servo;
+
+typedef enum
+{
+  REGISTRATION = 0,
+  VERIFICATION
+} RFID_STATUS;
+MFRC522 rc522(SS_PIN, RST_PIN);
+RFID_STATUS rfid_status;
+List<MFRC522::Uid> tag_list;
+bool cardPresent = false;
 
 void setup() {
-  Serial.begin(9600);       // 시리얼 통신 초기화
-  SPI.begin();              // SPI 버스 초기화
-  rfid.PCD_Init();          // MFRC522 초기화
-  servo.attach(SERVO_PIN);  // Servo 모터 초기화
-  // Serial.println("RFID reader initialized");
-  servo.write(0);
+  Serial.begin(9600);
+  pinMode(BUTTON_PIN, INPUT);
+  SPI.begin();
+  rc522.PCD_Init();
+  rfid_status = REGISTRATION;
+  Serial.println("[STATUS] Registration");
+  servo.attach(8);
+  servo.write(0); // 초기 위치 설정
 }
 
 void loop() {
-  // Look for new cards
-  if (rfid.PICC_IsNewCardPresent()) {
-    if (rfid.PICC_ReadCardSerial() && rfid_status == RFID_STATUS::REGISTRATION) {
-      // Print UID of the card
-      for (byte i = 0; i < rfid.uid.size; i++) {
-        Serial.print(rfid.uid.uidByte[i] < 0x10 ? "0" : "");  // leading zero 출력
-        Serial.print(rfid.uid.uidByte[i], HEX);
-        if (i + 1 < rfid.uid.size) {
-          Serial.print(" ");
-        }
-      }
-      Serial.println();
-      delay(500);                       // 0.5초 동안 대기
-      rfid.PICC_HaltA();                // 카드 리더 초기화
-      rfid_status = RFID_STATUS::IDLE;  // 상태를 변경하여 다음에 카드가 인식될 때까지 대기
-    }
-  } else {
-    rfid_status = RFID_STATUS::REGISTRATION;  // 카드가 없으면 다시 등록 상태로 변경
-  }
   if (Serial.available() > 0) {
-    char receivedChar = Serial.read();  // Read the incoming byte
-    if (receivedChar == 'y') {
-      servo.write(90);  // Servo 모터를 90도 회전
-      Serial.println("Servo rotated to 90 degrees");
-      delay(1000);
-      servo.write(0);
-    } else if (receivedChar == 'n') {
-      servo.write(180);  // Servo 모터를 180도 회전
-      Serial.println("Servo rotated to 180 degrees");
-      delay(1000);
-      servo.write(0);
+    char input = Serial.read();
+    if (input == 'v') {
+      rfid_status = VERIFICATION;
+      Serial.println("[STATUS] Verification");
+    } else if (input == 'r') {
+      rfid_status = REGISTRATION;
+      Serial.println("[STATUS] Registration");
     }
   }
+
+  if (!rc522.PICC_IsNewCardPresent()) {
+    if (cardPresent) {
+      servo.write(0); // 카드가 떼어졌을 때 서보 모터를 0도로 돌림
+      cardPresent = false;
+    }
+    return;
+  }
+
+  if (!rc522.PICC_ReadCardSerial()) {
+    return;
+  }
+
+  if (rfid_status == REGISTRATION) {
+    // 등록 모드: 새로운 카드 UID를 리스트에 추가
+    MFRC522::Uid uid = rc522.uid;
+    if (!checkUID(uid)) {
+      tag_list.addLast(uid);
+      Serial.print("Registration Tag: ");
+      printUID(uid);
+    }
+  } else if (rfid_status == VERIFICATION) {
+    // 인증 모드: 스캔된 카드 UID가 리스트에 있는지 확인 후 서보 모터 제어
+    MFRC522::Uid uid = rc522.uid;
+    if (checkUID(uid)) {
+      // 유효한 카드인 경우
+      servo.write(90); // 서보 모터를 90도 회전
+      
+      cardPresent = true;
+      delay(3000);
+    } else {
+      // 유효하지 않은 카드인 경우
+      servo.write(0); // 서보 모터를 0도로 회전
+      cardPresent = false;
+    }
+
+  }
+
+  delay(100);
+}
+
+void printUID(MFRC522::Uid uid) {
+  for (byte i = 0; i < 4; i++) {
+    Serial.print(uid.uidByte[i] < 0x10 ? " 0" : " ");
+    Serial.print(uid.uidByte[i], HEX);
+  }
+  Serial.println();
+}
+
+bool checkUID(MFRC522::Uid uid) {
+  for (int i = 0; i < tag_list.getSize(); i++) {
+    if (memcmp(tag_list.get(i).uidByte, uid.uidByte, 4) == 0) {
+      return true;
+    }
+  }
+  return false;
 }
