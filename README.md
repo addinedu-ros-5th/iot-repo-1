@@ -17,12 +17,15 @@
 ![image](https://github.com/addinedu-ros-5th/iot-repo-1/assets/86091697/a405b802-879b-45e0-99e4-ab16f518d044)
 ## 시퀀스 다이어그램
 - Danger step
+
 | step | Detection | Response |
 |-----------|-------------|-----------|
-|LV 0|	Gas and dust|Automatic mode operation, GUI representation|
+|LV 0|Gas and dust|Automatic mode operation, GUI representation|
 |LV 1|unusual sounds|GUI representation|
 |LV 2|loud sound without motion|Raise warning message|
 |LV 3|No response to warning message|Provide camera image and report|
+
+
 ![image](https://github.com/addinedu-ros-5th/iot-repo-1/assets/86091697/abc981ec-fb06-4058-a5f3-009f99863aa3)
 ## GUI
 ## 하드웨어 구성
