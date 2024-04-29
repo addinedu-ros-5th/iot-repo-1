@@ -37,7 +37,9 @@
 
 ![image](https://github.com/addinedu-ros-5th/iot-repo-1/assets/86091697/ebdbabd4-1545-496e-a49f-5d642f7ae0cd)
 
-![image](https://github.com/addinedu-ros-5th/iot-repo-1/assets/86091697/5fc22998-1ba1-4c4e-a829-9c595ffe27f7)
+![image](https://github.com/addinedu-ros-5th/iot-repo-1/assets/86091697/688ba3a2-8dce-4e82-8fc7-a1816826fc95)
+
+
 
 ## GUI
 ![image](https://github.com/addinedu-ros-5th/iot-repo-1/assets/86091697/62442255-b14d-449f-ae7e-e9717c879e68)
@@ -47,6 +49,8 @@
 ## Hardware Configuration
 - 3D modeling
 ![Home sensor](https://github.com/addinedu-ros-5th/iot-repo-1/assets/86091697/4bccb56c-d664-4a73-b927-31cc08110b95)
+- Floor plan
+![20240425_130101](https://github.com/addinedu-ros-5th/iot-repo-1/assets/86091697/0b31c4b8-1b1a-4730-86f9-0710d2f08686)
 
 ## Database
 ![image](https://github.com/addinedu-ros-5th/iot-repo-1/assets/86091697/9e66fc68-5210-473c-94e1-2ceec4b37a72)
