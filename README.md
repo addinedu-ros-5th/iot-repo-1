@@ -44,7 +44,8 @@
 ## GUI
 ![image](https://github.com/addinedu-ros-5th/iot-repo-1/assets/86091697/62442255-b14d-449f-ae7e-e9717c879e68)
 
-![image](https://github.com/addinedu-ros-5th/iot-repo-1/assets/86091697/697949d4-390b-494c-b281-1b1ca869b0f4)
+
+![screenshot_from_2024-05-01_09-19-28](https://github.com/addinedu-ros-5th/iot-repo-1/assets/163791820/615db182-b2cb-4fd5-8dcc-5b912f11ec86)
 
 ## Hardware Configuration
 - 3D modeling
